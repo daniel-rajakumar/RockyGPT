@@ -4,11 +4,12 @@ import dotenv from 'dotenv';
 const pdf = require('pdf-parse');
 import { db } from '../src/lib/db';
 import { generateEmbedding } from '../src/lib/ai/embedding';
+import * as cheerio from 'cheerio';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_DIR = path.join(process.cwd(), 'clean_data');
 
 async function processFile(filePath: string) {
   const ext = path.extname(filePath).toLowerCase();
@@ -17,12 +18,9 @@ async function processFile(filePath: string) {
   let text = '';
 
   try {
-    if (ext === '.pdf') {
-      const dataBuffer = fs.readFileSync(filePath);
-      const data = await pdf(dataBuffer);
-      text = data.text;
-    } else if (ext === '.txt' || ext === '.md') {
-      text = fs.readFileSync(filePath, 'utf-8');
+     if (ext === '.md') {
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      text = fileContent;
     } else {
       console.log(`Skipping unsupported file type: ${ext}`);
       return;
@@ -33,8 +31,8 @@ async function processFile(filePath: string) {
       return;
     }
 
-    // Clean text
-    text = text.replace(/\s+/g, ' ').trim();
+    // Clean text: replaces multiple newlines/spaces with a single space
+    // text = text.replace(/\s+/g, ' ').trim(); // Avoid over-cleaning markdown
 
     // Chunk text
     const chunks = chunkText(text, 1000, 200); // 1000 chars, 200 overlap
@@ -76,10 +74,14 @@ async function run() {
       console.log('Creating data directory...');
       fs.mkdirSync(DATA_DIR);
     }
+    
+    // Clear existing data
+    console.log('Clearing existing data...');
+    await db.query('TRUNCATE TABLE documents');
 
     const files = fs.readdirSync(DATA_DIR);
     if (files.length === 0) {
-      console.log('No files found in data/ directory. Please add .pdf, .txt, or .md files.');
+      console.log('No files found in clean_data/ directory.');
       return;
     }
 
@@ -87,7 +89,9 @@ async function run() {
     
     // Process sequentially to avoid rate limits
     for (const file of files) {
-      await processFile(path.join(DATA_DIR, file));
+      if (path.extname(file) === '.md') {
+          await processFile(path.join(DATA_DIR, file));
+      }
     }
     
     console.log('Ingestion complete!');

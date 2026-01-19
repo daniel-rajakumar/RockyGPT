@@ -32,20 +32,7 @@
   --border: #e4e4e7;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000; /* Keep pure black for high contrast preference */
-    --foreground: #FFFFFF;
-    
-    --primary: #8E0A26;
-    --primary-foreground: #FFFFFF;
-    
-    --muted: #231F20; /* Use Ramapo Black for muted backgrounds in dark mode */
-    --muted-foreground: #a1a1aa;
-    
-    --border: #3f3f46;
-  }
-}
+
 
 body {
   background-color: var(--background);

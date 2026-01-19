@@ -4,6 +4,8 @@
 // import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function Home() {
   const [messages, setMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string }>>([]);
@@ -97,7 +99,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-2xl mx-auto items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
               <Bot className="h-5 w-5" />
             </div>
             <span className="text-lg font-semibold tracking-tight text-primary">RockyGPT</span>
@@ -162,10 +164,33 @@ export default function Home() {
                   className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
                     m.role === 'user'
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-white dark:bg-zinc-900/50 border border-border shell-bg'
+                      : 'bg-white border border-border shell-bg text-foreground'
                   }`}
                 >
-                  <div className="whitespace-pre-wrap text-foreground dark:text-foreground">{m.content}</div>
+                  {m.role === 'user' ? (
+                    <div className="whitespace-pre-wrap">{m.content}</div>
+                  ) : (
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        // Bold text -> Maroon
+                        strong: ({...props}) => <span className="font-bold text-primary" {...props} />,
+                        // Headers -> Maroon & Bold
+                        h1: ({...props}) => <h1 className="font-bold text-2xl text-primary mt-3 mb-1" {...props} />,
+                        h2: ({...props}) => <h2 className="font-bold text-xl text-primary mt-2 mb-1" {...props} />,
+                        h3: ({...props}) => <h3 className="font-bold text-lg text-primary mt-2 mb-1" {...props} />,
+                        // Lists -> Bullets with Maroon markers
+                        ul: ({...props}) => <ul className="list-disc list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
+                        ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
+                        // Links -> Underline & Maroon
+                        a: ({...props}) => <a className="text-primary underline hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />,
+                        // Paragraphs -> Tighter spacing
+                        p: ({...props}) => <p className="leading-relaxed mb-2 last:mb-0" {...props} />,
+                      }}
+                    >
+                      {m.content}
+                    </ReactMarkdown>
+                  )}
                 </div>
 
                 {/* Feedback Actions (Only for AI) */}
