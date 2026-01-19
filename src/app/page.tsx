@@ -19,12 +19,12 @@ export default function Home() {
     <div className="flex flex-col min-h-screen relative font-sans">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 max-w-2xl items-center justify-between px-4">
+        <div className="container flex h-16 max-w-2xl mx-auto items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
               <Bot className="h-5 w-5" />
             </div>
-            <span className="text-lg font-semibold tracking-tight">RockyGPT</span>
+            <span className="text-lg font-semibold tracking-tight text-primary">RockyGPT</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
              <span className="hidden sm:inline-block">Ramapo College Assistant</span>
@@ -40,7 +40,7 @@ export default function Home() {
           {messages.length === 0 && (
             <div className="my-12 flex flex-col items-center justify-center gap-4 text-center">
               <div className="rounded-full bg-muted p-4">
-                <Sparkles className="h-8 w-8 text-foreground" />
+                <Sparkles className="h-8 w-8 text-primary" />
               </div>
               <h2 className="text-2xl font-bold tracking-tight">How can I help you today?</h2>
               <p className="text-muted-foreground max-w-md">
@@ -56,7 +56,7 @@ export default function Home() {
                         setInput(q);
                         await append({ role: 'user', content: q });
                       }}
-                      className="text-sm p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors text-left text-muted-foreground hover:text-foreground"
+                      className="text-sm p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors text-left text-muted-foreground hover:text-primary"
                     >
                       {q}
                     </button>
@@ -77,7 +77,7 @@ export default function Home() {
               <div
                 className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm ${
                   m.role === 'user'
-                    ? 'bg-foreground text-background'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-background text-foreground'
                 }`}
               >
@@ -89,8 +89,8 @@ export default function Home() {
                 <div
                   className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
                     m.role === 'user'
-                      ? 'bg-foreground text-background'
-                      : 'bg-white dark:bg-zinc-900 border border-border'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-white dark:bg-zinc-900/50 border border-border shell-bg'
                   }`}
                 >
                   <div className="whitespace-pre-wrap">{m.content}</div>
@@ -124,7 +124,7 @@ export default function Home() {
         <div className="mx-auto max-w-2xl">
           <form
             onSubmit={handleSubmit}
-            className="relative flex items-center rounded-2xl border border-input bg-background shadow-lg ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+            className="relative flex items-center rounded-2xl border border-input bg-background shadow-lg ring-offset-background focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
           >
             <input
               className="flex-1 bg-transparent px-4 py-4 text-sm outline-none placeholder:text-muted-foreground"
@@ -135,7 +135,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={isLoading || !input?.trim()}
-              className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               <Send className="h-4 w-4" />
               <span className="sr-only">Send</span>

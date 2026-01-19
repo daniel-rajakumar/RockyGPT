@@ -3,27 +3,47 @@
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #09090b;
-  --primary: #18181b;
-  --primary-foreground: #fafafa;
+  /* Ramapo Brand Palette */
+  --ramapo-maroon: #8E0A26;
+  --ramapo-black: #231F20;
+  --ramapo-gray: #848282;
+  --ramapo-white: #FFFFFF;
+
+  --background: var(--ramapo-white);
+  --foreground: var(--ramapo-black);
+  
+  --primary: var(--ramapo-maroon);
+  --primary-foreground: var(--ramapo-white);
+  
   --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  --muted-foreground: var(--ramapo-gray);
+  
   --border: #e4e4e7;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0c0c0e; /* Slightly softer than #09090b */
-    --foreground: #fafafa;
-    --primary: #fafafa;
-    --primary-foreground: #18181b;
-    --muted: #1e1e20;
+    --background: #000000; /* Keep pure black for high contrast preference */
+    --foreground: #FFFFFF;
+    
+    --primary: #8E0A26;
+    --primary-foreground: #FFFFFF;
+    
+    --muted: #231F20; /* Use Ramapo Black for muted backgrounds in dark mode */
     --muted-foreground: #a1a1aa;
-    --border: #27272a;
+    
+    --border: #3f3f46;
   }
 }
 
@@ -31,28 +51,8 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  /* Use a pure color stop approach for clarity */
-  background-image: radial-gradient(rgba(120, 120, 120, 0.1) 1px, transparent 1px);
-  background-size: 32px 32px;
-  background-position: center;
-  /* Make the mask fade out much sooner to avoid clutter */
-  mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%); 
+  opacity: 1;
 }
 
-/* Subtle fade for the dots */
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: inherit;
-    opacity: 0.15; /* Low opacity for the dots */
-    z-index: -1;
-    pointer-events: none;
-}
-
-/* Ensure content sits on top */
-body > * {
-    position: relative;
-    z-index: 1;
-}
+/* Make dots very subtle */
+/* Dots removed */
