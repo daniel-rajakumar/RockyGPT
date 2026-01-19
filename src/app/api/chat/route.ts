@@ -44,8 +44,8 @@ export async function POST(req: Request) {
 
     // 5. Stream the response back
     // 5. Stream the response back
-    // @ts-ignore - This method exists in the local node_modules definition
-    return result.toUIMessageStreamResponse();
+    // Fallback to text stream since DataStream is missing in this version
+    return result.toTextStreamResponse();
 
   } catch (error) {
     console.error('Chat API Error:', error);

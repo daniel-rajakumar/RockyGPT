@@ -1,50 +1,89 @@
 'use client';
 
 // @ts-ignore
-import { useChat } from '@ai-sdk/react';
+// import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles } from 'lucide-react';
 
 export default function Home() {
-  // @ts-ignore
-  const { messages, status, sendMessage } = useChat({
-    onFinish: (result) => {
-      // The result object from onFinish in this version has a nested message property
-      console.log('Received:', result.message?.content || result);
-    },
-  });
+  const [messages, setMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string }>>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Calculate isLoading based on status
-  const isLoading = status === 'submitted' || status === 'streaming';
+  // Scroll ref
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const sendMessage = async (content: string) => {
+    if (!content.trim() || isLoading) return;
+
+    const userMessage = { id: Date.now().toString(), role: 'user' as const, content };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+        }),
+      });
+
+      if (!response.ok) throw new Error(response.statusText);
+
+      // Create placeholder for assistant message
+      const assistantId = (Date.now() + 1).toString();
+      setMessages((prev) => [
+        ...prev,
+        { id: assistantId, role: 'assistant', content: '' },
+      ]);
+
+      const reader = response.body?.getReader();
+      if (!reader) return;
+
+      const decoder = new TextDecoder();
+      let done = false;
+      let accumulatedContent = '';
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value, { stream: !done });
+        accumulatedContent += chunkValue;
+
+        // Update the last message (assistant) with new content
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          const lastMsg = newMessages[newMessages.length - 1];
+          if (lastMsg.role === 'assistant') {
+            lastMsg.content = accumulatedContent;
+          }
+          return newMessages;
+        });
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const [input, setInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-
-    const userMessage = { role: 'user', content: input };
-    setInput(''); // Clear input immediately
     
-    try {
-      // @ts-ignore
-      await sendMessage(userMessage);
-    } catch (err) {
-      console.error("Failed to send message:", err);
-    }
+    const query = input;
+    setInput('');
+    await sendMessage(query);
   };
 
   const handleSuggestionClick = async (q: string) => {
     setInput(q);
-    const userMessage = { role: 'user', content: q };
-    setInput('');
-    try {
-      // @ts-ignore
-      await sendMessage(userMessage);
-    } catch (err) {
-      console.error("Failed to send suggestion:", err);
-    }
+    // Short delay to show input before clearing/sending? Or just send immediately.
+    // For manual implementation, just sending is cleaner.
+    setInput(''); 
+    await sendMessage(q);
   };
 
   // Auto-scroll to bottom
@@ -126,7 +165,7 @@ export default function Home() {
                       : 'bg-white dark:bg-zinc-900/50 border border-border shell-bg'
                   }`}
                 >
-                  <div className="whitespace-pre-wrap">{m.content}</div>
+                  <div className="whitespace-pre-wrap text-foreground dark:text-foreground">{m.content}</div>
                 </div>
 
                 {/* Feedback Actions (Only for AI) */}
