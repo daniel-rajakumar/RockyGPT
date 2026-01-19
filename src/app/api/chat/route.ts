@@ -34,8 +34,9 @@ export async function POST(req: Request) {
     });
 
     // 5. Stream the response back
-    // @ts-ignore - TS might complain but this is correct for AI SDK 4.x
-    return result.toDataStreamResponse();
+    // 5. Stream the response back
+    // @ts-ignore - This method exists in the local node_modules definition
+    return result.toUIMessageStreamResponse();
 
   } catch (error) {
     console.error('Chat API Error:', error);
