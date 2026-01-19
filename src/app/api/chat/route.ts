@@ -11,7 +11,8 @@ export async function POST(req: Request) {
     const lastMessage = messages[messages.length - 1]; // User's latest question
 
     // 1. Retrieve relevant documents
-    console.log(`Searching for: ${lastMessage.content}`);
+    // 1. Retrieve relevant documents
+    console.log(`\x1b[36mSearching for: ${lastMessage.content}\x1b[0m`);
     const relevantDocs = await searchDocuments(lastMessage.content, 3);
     
     // 2. Format context
@@ -38,7 +39,8 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages: coreMessages,
       onFinish: (event) => {
-        console.log('Received:', event.text);
+        // Log with Green color
+        console.log('\x1b[32mReceived Answer:\x1b[0m', event.text);
       },
     });
 
