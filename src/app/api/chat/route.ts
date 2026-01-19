@@ -27,10 +27,19 @@ export async function POST(req: Request) {
     ${context}`;
 
     // 4. Generate response using OpenAI (SDK 4.0)
+    // Convert UI messages to Core messages if necessary (simple text content)
+    const coreMessages = messages.map((m: any) => ({
+      role: m.role,
+      content: m.content || (m.parts ? m.parts.map((p: any) => p.text).join('') : '')
+    }));
+
     const result = await streamText({
       model: openai('gpt-3.5-turbo'),
       system: systemPrompt,
-      messages,
+      messages: coreMessages,
+      onFinish: (event) => {
+        console.log('Received:', event.text);
+      },
     });
 
     // 5. Stream the response back

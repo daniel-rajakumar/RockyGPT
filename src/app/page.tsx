@@ -8,16 +8,14 @@ import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles } from 'lucide-react';
 export default function Home() {
   // @ts-ignore
   const { messages, status, sendMessage } = useChat({
-    onError: (error) => {
-      console.error('Chat Error:', error);
-    },
-    onFinish: (message) => {
-      console.log('Chat Finished:', message);
+    onFinish: (result) => {
+      // The result object from onFinish in this version has a nested message property
+      console.log('Received:', result.message?.content || result);
     },
   });
 
   // Calculate isLoading based on status
-  const isLoading = status === 'submitted' || status === 'streaming' || status === 'calling_function';
+  const isLoading = status === 'submitted' || status === 'streaming';
 
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
