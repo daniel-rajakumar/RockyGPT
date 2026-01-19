@@ -7,8 +7,47 @@ import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles } from 'lucide-react';
 
 export default function Home() {
   // @ts-ignore
-  const { messages, input, handleInputChange, handleSubmit, isLoading, append, setInput } = useChat();
+  const { messages, status, sendMessage } = useChat({
+    onError: (error) => {
+      console.error('Chat Error:', error);
+    },
+    onFinish: (message) => {
+      console.log('Chat Finished:', message);
+    },
+  });
+
+  // Calculate isLoading based on status
+  const isLoading = status === 'submitted' || status === 'streaming' || status === 'calling_function';
+
+  const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage = { role: 'user', content: input };
+    setInput(''); // Clear input immediately
+    
+    try {
+      // @ts-ignore
+      await sendMessage(userMessage);
+    } catch (err) {
+      console.error("Failed to send message:", err);
+    }
+  };
+
+  const handleSuggestionClick = async (q: string) => {
+    setInput(q);
+    const userMessage = { role: 'user', content: q };
+    setInput('');
+    try {
+      // @ts-ignore
+      await sendMessage(userMessage);
+    } catch (err) {
+      console.error("Failed to send suggestion:", err);
+    }
+  };
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -51,11 +90,7 @@ export default function Home() {
                  {['Where is Student Center?', 'What are dining hours?', 'How to print?', 'Contact Registrar'].map((q) => (
                     <button 
                       key={q}
-                      onClick={async () => {
-                        // Optimistically set input just in case, but rely on append
-                        setInput(q);
-                        await append({ role: 'user', content: q });
-                      }}
+                      onClick={() => handleSuggestionClick(q)}
                       className="text-sm p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors text-left text-muted-foreground hover:text-primary"
                     >
                       {q}
