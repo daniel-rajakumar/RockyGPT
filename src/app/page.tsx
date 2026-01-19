@@ -199,7 +199,7 @@ export default function Home() {
             className="relative flex items-center rounded-2xl border border-input bg-background shadow-lg ring-offset-background focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
           >
             <input
-              className="flex-1 bg-transparent px-4 py-4 text-sm outline-none placeholder:text-muted-foreground text-foreground"
+              className="flex-1 bg-transparent px-4 py-4 text-base md:text-sm outline-none placeholder:text-muted-foreground text-foreground"
               placeholder="Message RockyGPT..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
