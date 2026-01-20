@@ -4,7 +4,7 @@ import path from 'path';
 import * as cheerio from 'cheerio';
 
 const INPUT_FILE = path.join(process.cwd(), 'data/menu.txt');
-const OUTPUT_DIR = path.join(process.cwd(), 'clean_data');
+const OUTPUT_DIR = path.join(process.cwd(), 'clean_data/dining');
 const OUTPUT_FILE = path.join(OUTPUT_DIR, 'menu.md');
 
 async function cleanMenuData() {

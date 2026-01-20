@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     // 1. Retrieve relevant documents
     // 1. Retrieve relevant documents
     console.log(`\x1b[36mSearching for: ${lastMessage.content}\x1b[0m`);
-    const relevantDocs = await searchDocuments(lastMessage.content, 3);
+    const relevantDocs = await searchDocuments(lastMessage.content, 15);
     
     // 2. Format context
     const context = relevantDocs.map(doc => `[Source: ${doc.metadata.source}]\n${doc.content}`).join('\n\n');
@@ -27,9 +27,15 @@ export async function POST(req: Request) {
     - **Formatting (CRITICAL)**:
       - Use **Markdown** for all responses.
       - **Always BOLD the keys/labels in lists** to highlight them. 
-        - Example: "**Monday**: 9:00 AM - 5:00 PM"
-        - Example: "**Location**: Student Center"
       - Use **Bold** for important locations, terms, or emphasis.
+    
+    - **Data Handling (CRITICAL)**:
+      1. **Extraction**: Identify all items matching the user's request.
+      2. **Deduplication**: If the same item appears multiple times (e.g., in different menus), **combine them** and show it ONLY once.
+      3. **Sorting**: If asked to sort (e.g., by calories), you MUST:
+         - Extract the numerical value.
+         - Sort strictly by that number.
+         - Double-check the order before outputting.
     
     Context:
     ${context}`;
@@ -42,7 +48,7 @@ export async function POST(req: Request) {
     }));
 
     const result = await streamText({
-      model: openai('gpt-3.5-turbo'),
+      model: openai('gpt-4o-mini'),
       system: systemPrompt,
       messages: coreMessages,
       onFinish: (event) => {
