@@ -19,10 +19,25 @@ export async function POST(req: Request) {
     const context = relevantDocs.map(doc => `[Source: ${doc.metadata.source}]\n${doc.content}`).join('\n\n');
     
     // 3. Construct system prompt
+    const now = new Date();
+    const currentTimestamp = now.toLocaleString('en-US', { 
+      timeZone: 'America/New_York', 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric', 
+      hour: 'numeric', 
+      minute: 'numeric',
+      hour12: true 
+    });
+
     const systemPrompt = `You are RockyGPT, the helpful AI assistant for Ramapo College.
     
+    Current Date & Time: ${currentTimestamp}
+    
     Instructions:
-    - Answer based ONLY on the provided Context.
+    - Answer based ONLY on the provided Context, EXCEPT for date/time references.
+    - **CALENDAR LOGIC**: You SHOULD calculate relative dates (e.g., "tomorrow", "this weekend") based on the "Current Date & Time" provided above.
     - If the answer is unknown, politely say so.
     - **Formatting (CRITICAL)**:
       - Use **Markdown** for all responses.
