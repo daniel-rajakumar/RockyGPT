@@ -14,8 +14,38 @@ export async function POST(req: Request) {
     console.log(`\x1b[36mSearching for: ${lastMessage.content}\x1b[0m`);
     const relevantDocs = await searchDocuments(lastMessage.content, 30);
     
-    // 2. Format context
-    const context = relevantDocs.map(doc => `[Source: ${doc.metadata.source}]\n${doc.content}`).join('\n\n');
+    // Define Source Mapping
+    const sourceMap: Record<string, { title: string; url: string }> = {
+      'dining/menu.md': { title: 'Dining Menus', url: 'https://www.ramapo.edu/dining/menus/' },
+      'dining/hours.md': { title: 'Dining Hours', url: 'https://www.ramapo.edu/dining/hours/' },
+      'hours.md': { title: 'Campus Hours', url: 'https://www.ramapo.edu/about/hours/' },
+      'academic/calendar.md': { title: 'Academic Calendar', url: 'https://www.ramapo.edu/academic-calendars/' },
+      'campus/live-events.md': { title: 'Archway Events', url: 'https://archway.ramapo.edu/events' },
+      'campus/events.md': { title: 'Campus Events', url: 'https://www.ramapo.edu/events/' },
+      'academic/tuition.md': { title: 'Tuition & Costs', url: 'https://www.ramapo.edu/student-accounts/tuition/' },
+      'campus/parking.md': { title: 'Parking Services', url: 'https://www.ramapo.edu/publicsafety/parking/' },
+      'campus/buildings.md': { title: 'Campus Map', url: 'https://www.ramapo.edu/map/' },
+      'academic/office-hours.md': { title: 'Office Hours', url: 'https://www.ramapo.edu/academics/' },
+      'academic/procedures.md': { title: 'Academic Procedures', url: 'https://www.ramapo.edu/registrar/' },
+      'campus/directory.md': { title: 'Campus Directory', url: 'https://www.ramapo.edu/directory/' },
+      'campus/safety.md': { title: 'Public Safety', url: 'https://www.ramapo.edu/publicsafety/' },
+      'campus/transportation.md': { title: 'Transportation', url: 'https://www.ramapo.edu/transportation/' },
+      'campus/technology.md': { title: 'ITS Help Desk', url: 'https://www.ramapo.edu/its/' },
+      'financial_aid/README.md': { title: 'Financial Aid', url: 'https://www.ramapo.edu/finaid/' },
+      'housing/README.md': { title: 'Residence Life', url: 'https://www.ramapo.edu/reslife/' },
+      'default': { title: 'Ramapo College Website', url: 'https://www.ramapo.edu/' }
+    };
+
+    // 2. Format context with mapped sources
+    const context = relevantDocs.map(doc => {
+      const filename = doc.metadata.source;
+      // Handle both "dining/menu.md" and just "menu.md" if paths vary
+      const mapping = sourceMap[filename] || 
+                      Object.entries(sourceMap).find(([key]) => filename.endsWith(key))?.[1] || 
+                      sourceMap['default'];
+      
+      return `[Source: ${mapping.title} (${mapping.url})]\n${doc.content}`;
+    }).join('\n\n');
     
     // 3. Construct system prompt
     const now = new Date();
@@ -39,18 +69,18 @@ export async function POST(req: Request) {
     - **CALENDAR LOGIC**: You SHOULD calculate relative dates (e.g., "tomorrow", "this weekend") based on the "Current Date & Time" provided above.
     - If the answer is unknown, politely say so.
     - **COMPLETENESS (CRITICAL)**: When asked for events or lists, show ALL matching items from the context. Do NOT summarize, truncate, or limit results. If there are 10 events, show all 10.
+    
     - **Formatting (CRITICAL)**:
       - Use **Markdown** for all responses.
       - **Always BOLD the keys/labels in lists** to highlight them. 
       - Use **Bold** for important locations, terms, or emphasis.
     
-    - **Data Handling (CRITICAL)**:
-      1. **Extraction**: Identify all items matching the user's request.
-      2. **Deduplication**: If the same item appears multiple times (e.g., in different menus), **combine them** and show it ONLY once.
-      3. **Sorting**: If asked to sort (e.g., by calories), you MUST:
-         - Extract the numerical value.
-         - Sort strictly by that number.
-         - Double-check the order before outputting.
+    - **CITATIONS (REQUIRED)**:
+      - At the very end of your response, list the unique sources you used.
+      - Format:
+        **Sources:**
+        - [Source Title](URL)
+      - Only show sources that were actually relevant to the answer.
     
     Context:
     ${context}`;

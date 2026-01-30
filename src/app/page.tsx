@@ -3,17 +3,35 @@
 // @ts-ignore
 // import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+// New component for fancy source display
+function SourceCard({ title, url }: { title: string; url: string }) {
+  return (
+    <a 
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-tl-2xl rounded-br-2xl rounded-bl-none bg-primary hover:bg-primary/90 transition-colors no-underline"
+    >
+      <span className="text-[10px] font-medium text-white">
+        {title}
+      </span>
+      <ExternalLink className="h-2.5 w-2.5 text-white/60" />
+    </a>
+  );
+}
+
 export default function Home() {
+  // ... (state and handlers remain same)
   const [messages, setMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Scroll ref
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [input, setInput] = useState('');
 
+  // ... (sendMessage and other existing logic remains same)
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
@@ -32,7 +50,6 @@ export default function Home() {
 
       if (!response.ok) throw new Error(response.statusText);
 
-      // Create placeholder for assistant message
       const assistantId = (Date.now() + 1).toString();
       setMessages((prev) => [
         ...prev,
@@ -52,7 +69,6 @@ export default function Home() {
         const chunkValue = decoder.decode(value, { stream: !done });
         accumulatedContent += chunkValue;
 
-        // Update the last message (assistant) with new content
         setMessages((prev) => {
           const newMessages = [...prev];
           const lastMsg = newMessages[newMessages.length - 1];
@@ -69,12 +85,9 @@ export default function Home() {
     }
   };
 
-  const [input, setInput] = useState('');
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-    
     const query = input;
     setInput('');
     await sendMessage(query);
@@ -82,20 +95,37 @@ export default function Home() {
 
   const handleSuggestionClick = async (q: string) => {
     setInput(q);
-    // Short delay to show input before clearing/sending? Or just send immediately.
-    // For manual implementation, just sending is cleaner.
     setInput(''); 
     await sendMessage(q);
   };
 
-  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Helper to extract sources from markdown content
+  const extractSources = (content: string) => {
+    const sourceRegex = /\*\*Sources:\*\*\s*((?:-\s*\[.*?\]\(.*?\)\s*)+)/;
+    const match = content.match(sourceRegex);
+    
+    if (!match) return { cleanContent: content, sources: [] };
+
+    const sourceBlock = match[1];
+    const cleanContent = content.replace(sourceRegex, '').trim();
+    
+    // Parse individual sources
+    const sources = sourceBlock.split('\n')
+      .map(line => {
+        const linkMatch = line.match(/\[(.*?)\]\((.*?)\)/);
+        return linkMatch ? { title: linkMatch[1], url: linkMatch[2] } : null;
+      })
+      .filter((s): s is { title: string; url: string } => s !== null);
+
+    return { cleanContent, sources };
+  };
+
   return (
     <div className="flex flex-col min-h-screen relative font-sans">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-2xl mx-auto items-center justify-between px-4">
           <div className="flex items-center gap-2">
@@ -110,11 +140,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 overflow-auto pb-32 pt-6">
         <div className="container max-w-2xl mx-auto px-4 flex flex-col gap-6">
-          
-          {/* Welcome State */}
           {messages.length === 0 && (
             <div className="my-12 flex flex-col items-center justify-center gap-4 text-center">
               <div className="rounded-full bg-muted p-4">
@@ -139,67 +166,76 @@ export default function Home() {
             </div>
           )}
 
-          {/* Message List */}
-          {messages.map((m: any) => (
-            <div
-              key={m.id}
-              className={`flex items-start gap-3 ${
-                m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-              }`}
-            >
-              {/* Avatar */}
+          {messages.map((m: any) => {
+            // Process message content for sources
+            const { cleanContent, sources } = m.role === 'assistant' 
+              ? extractSources(m.content) 
+              : { cleanContent: m.content, sources: [] };
+
+            return (
               <div
-                className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm ${
-                  m.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-background text-foreground'
+                key={m.id}
+                className={`flex items-start gap-3 ${
+                  m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                 }`}
               >
-                {m.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-              </div>
-
-              {/* Message Bubble */}
-              <div className={`relative group max-w-[85%]`}>
                 <div
-                  className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                  className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm ${
                     m.role === 'user'
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-white border border-border shell-bg text-foreground'
+                      : 'bg-background text-foreground'
                   }`}
                 >
-                  {m.role === 'user' ? (
-                    <div className="whitespace-pre-wrap">{m.content}</div>
-                  ) : (
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        // Bold text -> Maroon
-                        strong: ({...props}) => <span className="font-bold text-primary" {...props} />,
-                        // Headers -> Maroon & Bold
-                        h1: ({...props}) => <h1 className="font-bold text-2xl text-primary mt-3 mb-1" {...props} />,
-                        h2: ({...props}) => <h2 className="font-bold text-xl text-primary mt-2 mb-1" {...props} />,
-                        h3: ({...props}) => <h3 className="font-bold text-lg text-primary mt-2 mb-1" {...props} />,
-                        // Lists -> Bullets with Maroon markers
-                        ul: ({...props}) => <ul className="list-disc list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
-                        ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
-                        // Links -> Underline & Maroon
-                        a: ({...props}) => <a className="text-primary underline hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />,
-                        // Paragraphs -> Tighter spacing
-                        p: ({...props}) => <p className="leading-relaxed mb-2 last:mb-0" {...props} />,
-                      }}
-                    >
-                      {m.content}
-                    </ReactMarkdown>
-                  )}
+                  {m.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </div>
 
-                {/* Feedback Actions (Only for AI) */}
-                {m.role === 'assistant' && (
-                  <FeedbackButtons messageId={m.id} content={m.content} />
-                )}
+                <div className={`relative group max-w-[85%]`}>
+                  <div
+                    className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                      m.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-white border border-border shell-bg text-foreground'
+                    }`}
+                  >
+                    {m.role === 'user' ? (
+                      <div className="whitespace-pre-wrap">{m.content}</div>
+                    ) : (
+                      <>
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            strong: ({...props}) => <span className="font-bold text-primary" {...props} />,
+                            h1: ({...props}) => <h1 className="font-bold text-2xl text-primary mt-3 mb-1" {...props} />,
+                            h2: ({...props}) => <h2 className="font-bold text-xl text-primary mt-2 mb-1" {...props} />,
+                            h3: ({...props}) => <h3 className="font-bold text-lg text-primary mt-2 mb-1" {...props} />,
+                            ul: ({...props}) => <ul className="list-disc list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
+                            ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
+                            a: ({...props}) => <a className="text-primary underline hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />,
+                            p: ({...props}) => <p className="leading-relaxed mb-2 last:mb-0" {...props} />,
+                          }}
+                        >
+                          {cleanContent}
+                        </ReactMarkdown>
+
+                        {/* Render Source Cards */}
+                        {sources.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-2 justify-end -mr-4 -mb-3 ml-4">
+                            {sources.map((source, idx) => (
+                              <SourceCard key={idx} title={source.title} url={source.url} />
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {m.role === 'assistant' && (
+                    <FeedbackButtons messageId={m.id} content={m.content} />
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           
           {isLoading && (
             <div className="flex items-center gap-3">
@@ -216,7 +252,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Input Area */}
+      {/* Input Area (same as before) */}
       <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-background via-background/90 to-transparent pb-6 pt-10 px-4">
         <div className="mx-auto max-w-2xl">
           <form
@@ -248,21 +284,17 @@ export default function Home() {
 }
 
 function FeedbackButtons({ messageId, content }: { messageId: string; content: string }) {
+  // ... (Feedback logic with thumbs up/down remains exactly same)
   const [voted, setVoted] = useState<'up' | 'down' | null>(null);
 
   const handleVote = async (rating: 'up' | 'down') => {
     if (voted) return;
     setVoted(rating);
-
     try {
       await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: 'Unknown',
-          response: content,
-          rating: rating === 'up' ? 1 : -1,
-        }),
+        body: JSON.stringify({ query: 'Unknown', response: content, rating: rating === 'up' ? 1 : -1 }),
       });
     } catch (e) {
       console.error(e);

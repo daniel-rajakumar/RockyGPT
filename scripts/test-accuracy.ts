@@ -1,5 +1,5 @@
-import { openaiClient } from '../src/lib/ai/embedding';
-import { searchDocuments } from '../src/lib/ai/retrieval';
+import fs from 'fs';
+import path from 'path';
 
 interface TestQuestion {
   question: string;
@@ -8,150 +8,164 @@ interface TestQuestion {
 }
 
 const testQuestions: TestQuestion[] = [
-  {
-    question: "What are dining hours?",
-    category: "Dining",
-    expectedKeywords: ["Birch", "hours", "Monday", "Friday"]
-  },
-  {
-    question: "When is Spring Break?",
-    category: "Academic Calendar",
-    expectedKeywords: ["Spring Break", "March", "2026"]
-  },
-  {
-    question: "How much is tuition for in-state students?",
-    category: "Tuition",
-    expectedKeywords: ["tuition", "state", "credit"]
-  },
-  {
-    question: "How much does parking cost?",
-    category: "Parking",
-    expectedKeywords: ["parking", "permit", "cost", "$"]
-  },
-  {
-    question: "When does the library close?",
-    category: "Campus Hours",
-    expectedKeywords: ["library", "Potter", "close", "hours"]
-  },
-  {
-    question: "How do I change my major?",
-    category: "Procedures",
-    expectedKeywords: ["major", "advisor", "form", "Academic Advising"]
-  },
-  {
-    question: "How do I connect to WiFi?",
-    category: "Technology",
-    expectedKeywords: ["WiFi", "network", "RCNJ", "connect"]
-  },
-  {
-    question: "What's the registrar phone number?",
-    category: "Contact",
-    expectedKeywords: ["registrar", "phone", "201", "684"]
-  },
-  {
-    question: "What events are happening Friday?",
-    category: "Events",
-    expectedKeywords: ["Friday", "event", "2026"]
-  },
-  {
-    question: "Where is the gym?",
-    category: "Buildings",
-    expectedKeywords: ["Bradley", "Center", "gym", "fitness"]
-  }
+  // --- DINING (Critical for students) ---
+  { question: "Is Dunkin open right now?", category: "Dining", expectedKeywords: ["Dunkin", "hours", "AM", "PM"] },
+  { question: "What vegan food do you have?", category: "Dining", expectedKeywords: ["Vegan", "Vegetarian", "salad", "plant"] },
+  { question: "How much is a meal plan?", category: "Dining", expectedKeywords: ["meal plan", "cost", "semester", "$"] },
+  { question: "Where is the dining hall?", category: "Dining", expectedKeywords: ["Atrium", "Student Center", "Birch"] },
+  
+  // --- SOCIAL & EVENTS ---
+  { question: "Any fun events this weekend?", category: "Events", expectedKeywords: ["Friday", "Saturday", "Sunday", "event"] },
+  { question: "When is the next basketball game?", category: "Events", expectedKeywords: ["Basketball", "Bradley", "vs"] },
+  { question: "How do I join a club?", category: "Student Life", expectedKeywords: ["Archway", "student organizations", "join"] },
+  
+  // --- ACADEMIC STRESS ---
+  { question: "How do I withdraw from a class?", category: "Academics", expectedKeywords: ["withdraw", "deadline", "form", "registrar"] },
+  { question: "When are finals?", category: "Academics", expectedKeywords: ["final", "exam", "May", "December"] },
+  { question: "I need a tutor.", category: "Academics", expectedKeywords: ["Center for Student Success", "tutoring", "appointment"] },
+  { question: "Where is the library?", category: "Academics", expectedKeywords: ["Potter", "Library", "location"] },
+  
+  // --- MONEY ---
+  { question: "When is tuition due?", category: "Financial", expectedKeywords: ["payment", "due", "deadline"] },
+  { question: "How do I apply for financial aid?", category: "Financial", expectedKeywords: ["FAFSA", "financial aid", "deadline"] },
+  { question: "Are there work study jobs?", category: "Financial", expectedKeywords: ["handshake", "work study", "job"] },
+  
+  // --- DORM LIFE ---
+  { question: "I got locked out of my room.", category: "Housing", expectedKeywords: ["Public Safety", "RA", "office", "ID"] },
+  { question: "Can I have a guest overnight?", category: "Housing", expectedKeywords: ["guest", "policy", "sign in", "overnight"] },
+  { question: "How much is laundry?", category: "Housing", expectedKeywords: ["laundry", "free", "included"] },
+  
+  // --- TECH & SERVICES ---
+  { question: "Wifi is not working.", category: "Tech", expectedKeywords: ["ITS", "Help Desk", "Ramapo-Secure"] },
+  { question: "How do I print a paper?", category: "Tech", expectedKeywords: ["printer", "lab", "print"] },
+  { question: "Where is the gym?", category: "Health", expectedKeywords: ["Bradley", "Center", "fitness"] },
+  { question: "I'm sick, where do I go?", category: "Health", expectedKeywords: ["Health Services", "nurse", "appointment"] },
+  { question: "I feel really stressed/depressed.", category: "Health", expectedKeywords: ["Counseling", "mental health", "wellness"] },
+  
+  // --- TRANSPORT & SAFETY ---
+  { question: "Is there a shuttle to the train?", category: "Transport", expectedKeywords: ["shuttle", "Ramsey", "Route 17", "schedule"] },
+  { question: "How do I appeal a parking ticket?", category: "Transport", expectedKeywords: ["appeal", "public safety", "form"] },
+  { question: "I lost my ID card.", category: "Safety", expectedKeywords: ["Public Safety", "ID", "replace"] }
 ];
 
-async function testChatbot() {
-  console.log('🤖 RockyGPT Accuracy Test Report');
-  console.log('='.repeat(80));
-  console.log(`\nTesting ${testQuestions.length} questions...\n`);
+async function queryChatbot(question: string): Promise<string> {
+  try {
+    const response = await fetch('http://localhost:3000/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: question }] })
+    });
+    return response.ok ? await response.text() : `Error: ${response.statusText}`;
+  } catch (error) {
+    return `Error: ${String(error)}`;
+  }
+}
 
-  const results: any[] = [];
+// Judge the answer from a "Student POV"
+function evaluateStudentPOV(answer: string, expectedKeywords: string[]) {
+  const lowerAnswer = answer.toLowerCase();
+  
+  // 1. Accuracy Check (Keyword match)
+  const foundKeywords = expectedKeywords.filter(kw => lowerAnswer.includes(kw.toLowerCase()));
+  const accuracyScore = (foundKeywords.length / expectedKeywords.length) * 100;
+  
+  // 2. "Actionability" (Does it help me DO something?)
+  const hasLink = /http|www\.|\.edu/.test(answer);
+  const hasPhone = /\d{3}[-.]\d{3}[-.]\d{4}/.test(answer);
+  const hasLocation = /(Room|Wing|Center|Hall|Office)/i.test(answer);
+  const hasSteps = /(1\.|Step|First|Then)/i.test(answer);
+  
+  let utilityScore = 0;
+  if (hasLink) utilityScore += 25;
+  if (hasPhone) utilityScore += 25;
+  if (hasLocation) utilityScore += 25;
+  if (hasSteps) utilityScore += 25;
+  
+  // Bonus readability (Markdown usage)
+  if (answer.includes('**') || answer.includes('- ')) utilityScore += 10;
+  if (utilityScore > 100) utilityScore = 100;
+
+  // Final subjective grade
+  let grade = 'F';
+  if (accuracyScore > 70 && utilityScore > 50) grade = 'A';
+  else if (accuracyScore > 50 && utilityScore > 30) grade = 'B';
+  else if (accuracyScore > 20) grade = 'C';
+  
+  return { accuracyScore, utilityScore, grade, foundKeywords };
+}
+
+async function runTest() {
+  console.log('🚀 Starting 25-Question Student POV Test...');
+  
+  let markdownOutput = `# 🎓 RockyGPT Student POV Test Report
+
+*Generated: ${new Date().toLocaleString()}*
+
+## 🏫 Test Criteria (Student Perspective)
+We graded each answer on two metrics:
+1. **Accuracy:** Did it find the right facts?
+2. **Utility:** Was it actually helpful? (Links, Phone #s, Locations, Steps)
+
+| ID | Category | Question | Grade | Accuracy | Utility | Result |
+|----|----------|----------|-------|----------|---------|--------|
+`;
+
+  const results = [];
 
   for (let i = 0; i < testQuestions.length; i++) {
     const test = testQuestions[i];
-    console.log(`\n[${i + 1}/${testQuestions.length}] ${test.category}: "${test.question}"`);
-    console.log('-'.repeat(80));
+    console.log(`[${i+1}/25] Testing: ${test.question}...`);
+    
+    const answer = await queryChatbot(test.question);
+    const metrics = evaluateStudentPOV(answer, test.expectedKeywords);
+    
+    const statusIcon = metrics.grade === 'A' || metrics.grade === 'B' ? '✅' : metrics.grade === 'C' ? '⚠️' : '❌';
+    const safeAnswer = answer.replace(/\|/g, '\\|').replace(/\n/g, '<br>');
 
-    try {
-      // Retrieve relevant documents
-      const docs = await searchDocuments(test.question, 30);
-      
-      if (docs.length === 0) {
-        console.log('❌ NO DATA RETRIEVED');
-        results.push({
-          ...test,
-          status: 'FAILED',
-          reason: 'No relevant documents found',
-          docsRetrieved: 0
-        });
-        continue;
-      }
+    // Truncate answer for summary table
+    const summaryAnswer = safeAnswer.substring(0, 100) + '...';
 
-      // Check if expected keywords are in retrieved docs
-      const allContent = docs.map(d => d.content).join(' ').toLowerCase();
-      const foundKeywords = test.expectedKeywords.filter(kw => 
-        allContent.includes(kw.toLowerCase())
-      );
-      const accuracy = (foundKeywords.length / test.expectedKeywords.length) * 100;
-
-      console.log(`📊 Retrieved ${docs.length} document chunks`);
-      console.log(`🔍 Expected keywords: ${test.expectedKeywords.join(', ')}`);
-      console.log(`✓ Found keywords: ${foundKeywords.join(', ')}`);
-      console.log(`📈 Keyword match: ${foundKeywords.length}/${test.expectedKeywords.length} (${accuracy.toFixed(0)}%)`);
-      
-      // Show snippet of top result
-      console.log(`\n📄 Top result snippet:`);
-      console.log(`   Source: ${docs[0].metadata.source}`);
-      console.log(`   Content: ${docs[0].content.substring(0, 150)}...`);
-
-      const status = accuracy >= 75 ? '✅ PASS' : accuracy >= 50 ? '⚠️  PARTIAL' : '❌ FAIL';
-      console.log(`\n${status}`);
-
-      results.push({
-        ...test,
-        status: accuracy >= 75 ? 'PASS' : accuracy >= 50 ? 'PARTIAL' : 'FAIL',
-        accuracy,
-        docsRetrieved: docs.length,
-        foundKeywords,
-        topSource: docs[0].metadata.source
-      });
-
-    } catch (error) {
-      console.log('❌ ERROR:', error);
-      results.push({
-        ...test,
-        status: 'ERROR',
-        error: String(error),
-        docsRetrieved: 0
-      });
-    }
+    markdownOutput += `| ${i+1} | ${test.category} | ${test.question} | **${metrics.grade}** | ${metrics.accuracyScore.toFixed(0)}% | ${metrics.utilityScore}% | ${statusIcon} |\n`;
+    
+    results.push({ ...test, answer, ...metrics });
   }
 
-  // Summary
-  console.log('\n\n' + '='.repeat(80));
-  console.log('📊 FINAL RESULTS SUMMARY');
-  console.log('='.repeat(80));
+  // Stats
+  const gradeA = results.filter(r => r.grade === 'A').length;
+  const gradeB = results.filter(r => r.grade === 'B').length;
+  const gradeC = results.filter(r => r.grade === 'C').length;
+  const gradeF = results.filter(r => r.grade === 'F').length;
   
-  const passed = results.filter(r => r.status === 'PASS').length;
-  const partial = results.filter(r => r.status === 'PARTIAL').length;
-  const failed = results.filter(r => r.status === 'FAIL' || r.status === 'ERROR' || r.status === 'FAILED').length;
-  
-  console.log(`\n✅ PASSED:  ${passed}/${testQuestions.length} (${((passed/testQuestions.length)*100).toFixed(0)}%)`);
-  console.log(`⚠️  PARTIAL: ${partial}/${testQuestions.length} (${((partial/testQuestions.length)*100).toFixed(0)}%)`);
-  console.log(`❌ FAILED:  ${failed}/${testQuestions.length} (${((failed/testQuestions.length)*100).toFixed(0)}%)`);
-  
-  console.log('\n\n📋 DETAILED BREAKDOWN:');
+  markdownOutput += `
+<br>
+
+## 📊 Report Card
+- **A (Excellent):** ${gradeA}
+- **B (Good):** ${gradeB}
+- **C (Okay):** ${gradeC}
+- **F (Fail):** ${gradeF}
+- **GPA:** ${((gradeA*4 + gradeB*3 + gradeC*2)/25).toFixed(2)} / 4.0
+
+<br>
+
+## 📝 Full Responses (Student POV Analysis)
+
+`;
+
   results.forEach((r, i) => {
-    const icon = r.status === 'PASS' ? '✅' : r.status === 'PARTIAL' ? '⚠️' : '❌';
-    console.log(`${i + 1}. ${icon} [${r.category}] ${r.question}`);
-    console.log(`   Status: ${r.status} | Accuracy: ${r.accuracy?.toFixed(0) || 'N/A'}% | Docs: ${r.docsRetrieved}`);
+    markdownOutput += `### ${i+1}. ${r.question}
+**Grade:** ${r.grade} | **Accuracy:** ${r.accuracyScore.toFixed(0)}% | **Utility:** ${r.utilityScore}%
+> **Student Verdict:** ${r.grade === 'A' ? "Super helpful! 🌟" : r.grade === 'B' ? "Good info. 👍" : "Could be better. 🤔"}
+
+${r.answer}
+
+---\n\n`;
   });
 
-  console.log('\n' + '='.repeat(80));
-  console.log(`Overall Score: ${((passed + partial * 0.5) / testQuestions.length * 100).toFixed(0)}%`);
-  console.log('='.repeat(80));
-
-  process.exit(0);
+  const outputPath = path.join(process.cwd(), 'student_pov_report.md');
+  fs.writeFileSync(outputPath, markdownOutput);
+  
+  console.log(`\n✅ Test complete! Saved to: ${outputPath}`);
 }
 
-testChatbot();
+runTest();
