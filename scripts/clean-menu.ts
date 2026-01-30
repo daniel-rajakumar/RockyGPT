@@ -22,7 +22,9 @@ async function cleanMenuData() {
   const locationName = $('h1.custom-h1').first().text().trim();
   if (locationName) {
     markdown += `# ${locationName}\n\n`;
+    markdown += `*Last Fetched: ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })}*\n\n`;
   }
+
 
   // 2. Extract Hours
   markdown += `## Hours of Operation\n\n`;

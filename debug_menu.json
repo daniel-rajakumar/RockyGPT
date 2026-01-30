@@ -1,0 +1,28 @@
+{
+  "name": "Birch Tree Inn Menu",
+  "link": {
+    "uri": "/en-us/locations/birch-tree-inn"
+  },
+  "sections": [
+    {
+      "groups": [
+        {
+          "items": [
+            {
+              "price": 0,
+              "allergens": [],
+              "isVegan": false,
+              "isVegetarian": false,
+              "isMindful": false,
+              "isSwell": false,
+              "sizes": [],
+              "addons": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "allergenwarningtitle": "Allergen Warning",
+  "allergendescription": "All products from our catalogue may contain or be prepared with equipment that is also used to prepare products containing wheat, soy, milk, eggs, peanuts, tree nuts, fish, shellfish and gluten. Please contact us before ordering if you have any questions about any of our selections."
+}

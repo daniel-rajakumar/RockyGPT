@@ -79,19 +79,38 @@ async function run() {
     console.log('Clearing existing data...');
     await db.query('TRUNCATE TABLE documents');
 
-    const files = fs.readdirSync(DATA_DIR);
-    if (files.length === 0) {
-      console.log('No files found in clean_data/ directory.');
+    // Recursive function to get all files
+    const getFilesRecursively = (dir: string): string[] => {
+      let results: string[] = [];
+      const list = fs.readdirSync(dir);
+      
+      list.forEach((file) => {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        
+        if (stat && stat.isDirectory()) { 
+          results = results.concat(getFilesRecursively(filePath));
+        } else { 
+          results.push(filePath);
+        }
+      });
+      return results;
+    };
+
+    console.log('Scanning for files...');
+    const allFiles = getFilesRecursively(DATA_DIR);
+    const mdFiles = allFiles.filter(file => path.extname(file).toLowerCase() === '.md');
+
+    if (mdFiles.length === 0) {
+      console.log('No .md files found in clean_data/ directory.');
       return;
     }
 
-    console.log(`Found ${files.length} files.`);
+    console.log(`Found ${mdFiles.length} markdown files.`);
     
     // Process sequentially to avoid rate limits
-    for (const file of files) {
-      if (path.extname(file) === '.md') {
-          await processFile(path.join(DATA_DIR, file));
-      }
+    for (const file of mdFiles) {
+       await processFile(file);
     }
     
     console.log('Ingestion complete!');
