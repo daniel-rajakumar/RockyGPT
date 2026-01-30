@@ -205,12 +205,22 @@ export async function POST(req: Request) {
       • Location: Bradley Center
       • Description: Details here
     
-    - **CITATIONS (REQUIRED)**:
-      - At the very end of your response, list the unique sources you used.
-      - Format:
-        **Sources:**
-        - [Source Title](URL)
-      - Only show sources that were actually relevant to the answer.
+    - **RELATED QUESTIONS (REQUIRED)**:
+      - At the very end of your response, after citations, you MUST suggest 3 relevant follow-up questions.
+      - Use the delimiter '<<RELATED>>' on a new line before the questions.
+      - One question per line.
+      - Questions should be short, natural, and encourage exploring more features (e.g., dining, events, bus).
+      
+      Example Format:
+      [Your main answer here...]
+      
+      **Sources:**
+      - [Source Title](URL)
+      
+      <<RELATED>>
+      What's the next bus?
+      Is the dining hall open?
+      Any events tonight?
     
     Context:
     ${context}`;

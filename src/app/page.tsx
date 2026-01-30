@@ -14,7 +14,7 @@ function SourceCard({ title, url }: { title: string; url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-tl-2xl bg-primary hover:bg-primary/90 transition-colors no-underline z-10"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary hover:bg-primary/90 transition-colors no-underline z-10"
     >
       <span className="text-[10px] font-medium text-white">
         {title}
@@ -273,77 +273,113 @@ export default function Home() {
           )}
 
           {messages.map((m: any) => {
-            // Process message content for sources
-            const { cleanContent, sources } = m.role === 'assistant' 
+            // 1. Extract sources first
+            const { cleanContent: contentWithRelated, sources } = m.role === 'assistant' 
               ? extractSources(m.content) 
               : { cleanContent: m.content, sources: [] };
+
+            // 2. Extract Related Questions
+            let displayContent = contentWithRelated;
+            let relatedQuestions: string[] = [];
+
+            if (m.role === 'assistant' && contentWithRelated.includes('<<RELATED>>')) {
+              const parts = contentWithRelated.split('<<RELATED>>');
+              displayContent = parts[0].trim();
+              const relatedBlock = parts[1];
+              if (relatedBlock) {
+                relatedQuestions = relatedBlock
+                  .split('\n')
+                  .map((q: string) => q.trim())
+                  .filter((q: string) => q.length > 0);
+              }
+            }
 
             return (
               <div
                 key={m.id}
-                className={`flex items-start gap-3 ${
-                  m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                className={`flex flex-col gap-2 ${
+                  m.role === 'user' ? 'items-end' : 'items-start'
                 }`}
               >
-                <div
-                  className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm ${
-                    m.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-background text-foreground'
-                  }`}
-                >
-                  {m.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                </div>
-
-                <div className={`relative group max-w-[85%]`}>
+                <div className={`flex items-start gap-3 max-w-[85%] ${
+                  m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                }`}>
                   <div
-                    className={`relative overflow-hidden rounded-2xl text-sm leading-relaxed shadow-sm ${
+                    className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm ${
                       m.role === 'user'
-                        ? 'bg-primary text-primary-foreground px-4 py-3'
-                        : `bg-white border border-border shell-bg text-foreground px-4 py-3 ${sources.length > 0 ? 'pb-12' : 'pb-3'}`
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background text-foreground'
                     }`}
                   >
-                    {m.role === 'user' ? (
-                      <div className="whitespace-pre-wrap">{m.content}</div>
-                    ) : (
-                      <>
-                        <ReactMarkdown 
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                            strong: ({...props}) => <span className="font-bold text-primary" {...props} />,
-                            h1: ({...props}) => <h1 className="font-bold text-2xl text-primary mt-3 mb-1" {...props} />,
-                            h2: ({...props}) => <h2 className="font-bold text-xl text-primary mt-2 mb-1" {...props} />,
-                            h3: ({...props}) => <h3 className="font-bold text-lg text-primary mt-2 mb-1" {...props} />,
-                            ul: ({...props}) => <ul className="list-disc list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
-                            ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
-                            a: ({...props}) => <a className="text-primary underline hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />,
-                            p: ({...props}) => <p className="leading-relaxed mb-2 last:mb-0" {...props} />,
-                          }}
-                        >
-                          {cleanContent}
-                        </ReactMarkdown>
-
-                        {/* Render Source Card - Absolutely positioned to bottom right */}
-                        {sources.length > 0 && (
-                          <div className="absolute bottom-0 right-0">
-                            {sources.map((source, idx) => (
-                              <SourceCard key={idx} title={source.title} url={source.url} />
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    )}
+                    {m.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                   </div>
 
-                  {m.role === 'assistant' && (
-                    <FeedbackButtons messageId={m.id} content={m.content} />
-                  )}
+                  <div className={`relative group w-full`}>
+                    <div
+                      className={`relative overflow-hidden rounded-2xl text-sm leading-relaxed shadow-sm ${
+                        m.role === 'user'
+                          ? 'bg-primary text-primary-foreground px-4 py-3'
+                          : `bg-white border border-border shell-bg text-foreground px-3 py-3 sm:px-4 ${sources.length > 0 ? 'pb-8 sm:pb-3' : 'pb-3'}`
+                      }`}
+                    >
+                      {m.role === 'user' ? (
+                        <div className="whitespace-pre-wrap">{m.content}</div>
+                      ) : (
+                        <>
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              strong: ({...props}) => <span className="font-bold text-primary" {...props} />,
+                              h1: ({...props}) => <h1 className="font-bold text-2xl text-primary mt-3 mb-1" {...props} />,
+                              h2: ({...props}) => <h2 className="font-bold text-xl text-primary mt-2 mb-1" {...props} />,
+                              h3: ({...props}) => <h3 className="font-bold text-lg text-primary mt-2 mb-1" {...props} />,
+                              ul: ({...props}) => <ul className="list-disc list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
+                              ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
+                              a: ({...props}) => <a className="text-primary underline hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />,
+                              p: ({...props}) => <p className="leading-relaxed mb-2 last:mb-0" {...props} />,
+                            }}
+                          >
+                            {displayContent}
+                          </ReactMarkdown>
+
+                          {/* Render Source Card - Adjusted position logic */}
+                          {sources.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-border flex flex-wrap gap-2">
+                              {sources.map((source, idx) => (
+                                <SourceCard key={idx} title={source.title} url={source.url} />
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {m.role === 'assistant' && (
+                      <FeedbackButtons messageId={m.id} content={m.content} />
+                    )}
+                  </div>
                 </div>
+
+                {/* Related Questions Chips */}
+                {relatedQuestions.length > 0 && (
+                  <div className="pl-11 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {relatedQuestions.map((q, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSuggestionClick(q)}
+                        className="inline-flex items-center px-3 py-1.5 rounded-full bg-background border border-primary/20 text-xs font-medium text-primary hover:bg-primary/5 hover:border-primary transition-colors cursor-pointer shadow-sm"
+                      >
+                       <Sparkles className="w-3 h-3 mr-1.5 opacity-70" />
+                       {q}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
           
-          {isLoading && (
+          {isLoading && messages[messages.length - 1]?.role === 'user' && (
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-primary/10 shadow-sm">
                 <Bot className="h-4 w-4 text-primary animate-pulse" />
