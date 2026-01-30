@@ -1,6 +1,6 @@
 # Birch Tree Inn Menu
 
-*Last Updated: 1/29/2026, 8:51:40 PM*
+*Last Updated: 1/29/2026, 8:51:22 PM*
 
 ---
 

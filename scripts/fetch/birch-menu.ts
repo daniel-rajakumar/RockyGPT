@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const API_URL = 'https://api-prd.sodexomyway.net/v0.2/data/menu/97508001/15858';
 const API_KEY = '68717828-b754-420d-9488-4c37cb7d7ef7';
-const OUTPUT_PATH = path.join(__dirname, '../clean_data/dining/menu.md');
+const OUTPUT_PATH = path.join(__dirname, '../../clean_data/dining/menu.md');
 
 interface MenuItem {
     formalName: string;
