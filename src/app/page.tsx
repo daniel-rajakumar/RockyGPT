@@ -44,7 +44,16 @@ export default function Home() {
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     setIsIOS(iOS);
 
-    // On iOS, always show button (can't detect if installed)
+    // Check if already installed (standalone mode)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (isStandalone) {
+      // Already installed, don't show button
+      setShowInstallButton(false);
+      return;
+    }
+
+    // On iOS (not installed), always show button (can't detect via event)
     if (iOS) {
       setShowInstallButton(true);
     }
@@ -57,11 +66,6 @@ export default function Home() {
     };
 
     window.addEventListener('beforeinstallprompt', handler);
-
-    // Check if already installed (non-iOS)
-    if (!iOS && window.matchMedia('(display-mode: standalone)').matches) {
-      setShowInstallButton(false);
-    }
 
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
