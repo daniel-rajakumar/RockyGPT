@@ -227,21 +227,37 @@ export async function POST(req: Request) {
       - **Formatting Pattern**: Use **Key:** Value format (bold the key AND the colon) for ALL list items.
       - **Explicitly BOLD these labels**: **Breakfast:**, **Lunch:**, **Dinner:**, **Late Night:**, **Monday:**, etc.
       
-      - **USE TABLES for Structured Data**:
-        - For **Weekly Hours**, **Bus Schedules**, or **Menus**, ALWAYS use a Markdown Table.
-        - Tables are cleaner and easier to read than lists.
+      - **USE TABLES for Structured Data (CRITICAL)**:
+        - ANY data with key-value pairs (e.g., Day: Hours, Location: Time, Item: Details) MUST be a Markdown Table.
+        - This includes: **Dining Hours**, **Building Hours**, **Bus Schedules**, **Menus**, **Contact Info**, etc.
+        - **NEVER use bullet lists for structured data.** Tables are always cleaner and easier to read.
+        - If you're about to write "• **Key:** Value", STOP and use a table instead.
       
-      **Example Table (Schedules):**
+      **SMART TABLE DESIGN:**
+      - If data is grouped (e.g., hours by location), use **SEPARATE TABLES with headers** instead of one big table with empty cells.
+      - Avoid tables with repeated empty cells - they look messy. Group data logically.
+      
+      **✅ GOOD - Separate tables per location:**
+      
+      **Birch Tree Inn**
+      | Meal | Hours |
+      | :--- | :--- |
+      | Breakfast | 08:00 AM - 10:30 AM |
+      | Lunch | 11:00 AM - 02:00 PM |
+      | Dinner | 05:00 PM - 08:00 PM |
+      
+      **Dunkin'**
       | Day | Hours |
       | :--- | :--- |
-      | **Mon-Fri** | 07:30 AM - 08:00 PM |
-      | **Sat-Sun** | Closed |
-
-      **Example Table (Menus):**
-      | Station | Item | Details |
-      | :--- | :--- | :--- |
-      | **Grill** | Cheeseburger | 450 cal, w/ fries |
-      | **Entree** | Grilled Salmon | [GF] lemon butter |
+      | Mon-Fri | 07:30 AM - 03:00 PM |
+      | Sat-Sun | Closed |
+      
+      **❌ BAD - One table with empty/repeated cells:**
+      | Location | Day | Meal | Hours |
+      | Birch Tree Inn | Mon-Fri | Breakfast | 08:00 AM |
+      | | | Lunch | 11:00 AM |   ← Empty cells look bad!
+      
+      **IMPORTANT:** NEVER use <br> tags in tables - they don't render. Use separate rows or tables instead.
 
       - Use **Bold** for important locations, terms, or emphasis.
       - **Keep responses COMPACT** - avoid excessive bullets, put details inline when possible.
