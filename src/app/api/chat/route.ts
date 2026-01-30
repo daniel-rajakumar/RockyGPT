@@ -10,10 +10,9 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
     const lastMessage = messages[messages.length - 1]; // User's latest question
 
-    // 1. Retrieve relevant documents
-    // 1. Retrieve relevant documents
+    // 1. Retrieve relevant documents (increased limit for comprehensive results)
     console.log(`\x1b[36mSearching for: ${lastMessage.content}\x1b[0m`);
-    const relevantDocs = await searchDocuments(lastMessage.content, 15);
+    const relevantDocs = await searchDocuments(lastMessage.content, 30);
     
     // 2. Format context
     const context = relevantDocs.map(doc => `[Source: ${doc.metadata.source}]\n${doc.content}`).join('\n\n');
@@ -39,6 +38,7 @@ export async function POST(req: Request) {
     - Answer based ONLY on the provided Context, EXCEPT for date/time references.
     - **CALENDAR LOGIC**: You SHOULD calculate relative dates (e.g., "tomorrow", "this weekend") based on the "Current Date & Time" provided above.
     - If the answer is unknown, politely say so.
+    - **COMPLETENESS (CRITICAL)**: When asked for events or lists, show ALL matching items from the context. Do NOT summarize, truncate, or limit results. If there are 10 events, show all 10.
     - **Formatting (CRITICAL)**:
       - Use **Markdown** for all responses.
       - **Always BOLD the keys/labels in lists** to highlight them. 
