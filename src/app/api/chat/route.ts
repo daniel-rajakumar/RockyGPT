@@ -176,13 +176,10 @@ export async function POST(req: Request) {
     - If the answer is unknown, politely say so.
     - **COMPLETENESS (CRITICAL)**: When asked for events or lists, show ALL matching items from the context. Do NOT summarize, truncate, or limit results. If there are 10 events, show all 10.
     
-    - **SCHEDULE/TIME QUERIES (CRITICAL)**:
-      - When asked for "next" bus/shuttle/event, provide ONLY the immediate next available option that hasn't happened yet.
-      - **ALWAYS compare against current time:** If it's 8:38 AM and the schedule shows 8:25 AM, that bus is GONE. Show 10:15 AM instead.
-      - Filter out any past times - only show future departures/events.
-      - Example: "Bus to GSP?" at 8:38 AM → Show 10:15 AM departure, NOT 8:25 AM.
-      - If asked for "all buses" or "full schedule", then show the complete list.
-      - Be concise: Give the departure time, arrival time, and key stops only.
+      - **SCHEDULE/TIME QUERIES (CRITICAL)**:
+      - **"Next" Query:** If user asks for "next bus", provide ONLY the immediate next option (Single Item).
+      - **"Today/Schedule" Query:** If user asks "bus times today" or "shuttle schedule", show a **TABLE** of all remaining future times for the day.
+      - **ALWAYS compare against current time:** If it's 8:38 AM and the schedule shows 8:25 AM, that bus is GONE. Filter past times.
     
     - **Formatting (CRITICAL)**:
       - Use **Markdown** for all responses.
