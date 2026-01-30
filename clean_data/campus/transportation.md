@@ -56,15 +56,72 @@ Information on getting to and around campus.
 
 ---
 
-## 🚐 **Campus Shuttle**
+## 🚐 **Campus Shuttle - Ramapo Roadrunner Express**
 
-> **Check with Transportation Services for current shuttle routes and schedules**
-> Contact: 201-684-7500
+> **Contact:** Center for Student Involvement (CSI) - csi@ramapo.edu or 201-684-7593  
+> **After Hours:** Public Safety - 201-684-6666  
+> **Updates:** Follow [@RCNJShuttle on Twitter](https://twitter.com/rcnjshuttle)
 
-### Typical Routes (Verify current schedule)
-- Campus loop
-- Off-campus housing connections
-- Local shopping areas
+### Important Notes
+- **Campus Stop:** Shuttle only stops at **Bradley Center** (does not go to residential areas)
+- **Schedule Updates:** Changes announced via Twitter @RCNJShuttle and Transportation Services website
+- **Times:** All times are approximate - may vary due to traffic, weather, or train delays
+- **Weather Closures:** Shuttles may not run during college closings
+
+### Pickup Locations
+- **Interstate Plaza:** In front of Macy's
+- **CityMD Ramsey:** Outside main entrance
+- **Garden State Plaza:** Bus shelters across from Neiman Marcus
+- **Barnes & Noble/Fashion Center:** Large column furthest from entrance, facing Rt 17
+
+---
+
+### Weekday Full Service Schedule (Spring 2026)
+
+| Leave Ramapo | Ramsey Rt 17 Train | Interstate Plaza | CityMD Ramsey | Garden State Plaza | Arrive on Campus |
+|--------------|-------------------|------------------|---------------|-------------------|------------------|
+| 7:00 AM | – | – | – | 7:30 AM | 7:55 AM |
+| 8:25 AM | *See Express* | 8:35 AM | – | 8:55 AM | 9:25 AM |
+| 10:15 AM | *See Express* | 10:25 AM | – | 10:45 AM | 11:20 AM |
+| 4:40 PM | 4:50 PM | 4:55 PM | 5:00 PM | 5:25 PM | 6:10 PM |
+| 6:10 PM | 6:20 PM | 6:25 PM | 6:30 PM | 6:50 PM | 7:35 PM |
+| 8:20 PM | 8:30 PM | 8:35 PM | – | 8:55 PM | 9:35 PM |
+| 9:40 PM | 9:50 PM | 9:55 PM | – | 10:15 PM | 10:45 PM |
+
+---
+
+### Mid-Day Weekday Express (Train Station Only)
+
+**Service:** Bradley Center ↔ Ramsey Rt 17 Train Station  
+**Frequency:** Every 20-40 minutes  
+**Hours:** 7:00 AM - 5:40 PM weekdays
+
+**Example Departure Times from Ramapo:**  
+7:00 AM • 7:25 AM • 7:50 AM • 8:20 AM • 8:40 AM • 9:05 AM • 9:45 AM • 10:40 AM • 11:45 AM • 12:45 PM • 1:40 PM • 2:35 PM • 2:55 PM • 3:25 PM • 3:50 PM • 4:10 PM • 4:45 PM • 5:30 PM
+
+---
+
+### Saturday Schedule
+
+| Leave Ramapo | Ramsey Rt 17 Train | Interstate Plaza | Garden State Plaza | Ramsey Square | Arrive on Campus |
+|--------------|-------------------|------------------|-------------------|---------------|------------------|
+| 9:00 AM | 9:10 AM | 9:15 AM | – | – | 9:30 AM |
+| 11:00 AM | 11:10 AM | 11:15 AM | 11:35 AM | 12:00 PM | 12:25 PM |
+| 1:40 PM | 1:50 PM | 1:55 PM | 2:15 PM | 2:40 PM | 3:00 PM |
+| 5:25 PM | – | 5:35 PM | 6:00 PM | 6:25 PM | 6:35 PM |
+| 9:55 PM | 10:05 PM | 10:10 PM | 10:30 PM | – | 11:00 PM |
+
+---
+
+### Sunday Schedule
+
+| Leave Ramapo | Ramsey Rt 17 Train | Interstate Plaza | Ramsey Farmers Market | Garden State Plaza | Arrive on Campus |
+|--------------|-------------------|------------------|---------------------|-------------------|------------------|
+| 10:00 AM | 10:10 AM | 10:15 AM | 10:25 AM | – | 10:45 AM |
+| 12:00 PM | 12:10 PM | 12:15 PM | 12:25 PM | – | 12:40 PM |
+| 2:00 PM | 2:10 PM | 2:15 PM | – | 2:35 PM | 3:05 PM |
+| 3:50 PM | 4:00 PM | 4:05 PM | – | 4:30 PM | 5:00 PM |
+| 6:55 PM | 7:05 PM | 7:10 PM | – | 7:30 PM | 8:00 PM |
 
 ---
 
