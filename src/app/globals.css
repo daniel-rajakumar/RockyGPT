@@ -13,35 +13,26 @@
   --color-border: var(--border);
 }
 
-:root {
-  /* Ramapo Brand Palette */
-  --ramapo-maroon: #8E0A26;
-  --ramapo-black: #231F20;
-  --ramapo-gray: #848282;
-  --ramapo-white: #FFFFFF;
-
-  --background: var(--ramapo-white);
-  --foreground: var(--ramapo-black);
-  
-  --primary: var(--ramapo-maroon);
-  --primary-foreground: var(--ramapo-white);
-  
-  --muted: #f4f4f5;
-  --muted-foreground: var(--ramapo-gray);
-  
-  --border: #e4e4e7;
-}
-
-
-
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  opacity: 1;
-}
-
 @layer base {
+  :root {
+    /* Ramapo Brand Palette */
+    --ramapo-maroon: #8E0A26;
+    --ramapo-black: #231F20;
+    --ramapo-gray: #848282;
+    --ramapo-white: #FFFFFF;
+
+    --background: var(--ramapo-white);
+    --foreground: var(--ramapo-black);
+    
+    --primary: var(--ramapo-maroon);
+    --primary-foreground: var(--ramapo-white);
+    
+    --muted: #f4f4f5;
+    --muted-foreground: var(--ramapo-gray);
+    
+    --border: #e4e4e7;
+  }
+
   .dark {
     --background: #0a0a0a;
     --foreground: #ededed;
@@ -52,6 +43,14 @@ body {
     --border: #333333;
   }
 }
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  opacity: 1;
+}
+
 
 
 /* Make dots very subtle */
