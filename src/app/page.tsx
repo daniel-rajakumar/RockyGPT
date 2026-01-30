@@ -367,9 +367,9 @@ export default function Home() {
                       <button
                         key={idx}
                         onClick={() => handleSuggestionClick(q)}
-                        className="inline-flex items-center px-3 py-1.5 rounded-full bg-background border border-primary/20 text-xs font-medium text-primary hover:bg-primary/5 hover:border-primary transition-colors cursor-pointer shadow-sm"
+                        className="inline-flex items-center px-3 py-2 rounded-2xl bg-background border border-primary/20 text-xs font-medium text-primary hover:bg-primary/5 hover:border-primary transition-colors cursor-pointer shadow-sm text-left h-auto"
                       >
-                       <Sparkles className="w-3 h-3 mr-1.5 opacity-70" />
+                       <Sparkles className="w-3 h-3 mr-2 opacity-70 shrink-0" />
                        {q}
                       </button>
                     ))}

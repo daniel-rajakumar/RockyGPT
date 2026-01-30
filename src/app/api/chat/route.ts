@@ -209,7 +209,8 @@ export async function POST(req: Request) {
       - At the very end of your response, after citations, you MUST suggest 3 relevant follow-up questions.
       - Use the delimiter '<<RELATED>>' on a new line before the questions.
       - One question per line.
-      - Questions should be short, natural, and encourage exploring more features (e.g., dining, events, bus).
+      - Questions MUST be **VERY SHORT (max 6 words)** to fit in buttons.
+      - Example: "Dining hours today?", "Next bus?", "Events tonight?"
       
       Example Format:
       [Your main answer here...]
