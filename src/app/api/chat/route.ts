@@ -174,6 +174,12 @@ export async function POST(req: Request) {
     - If the answer is unknown, politely say so.
     - **COMPLETENESS (CRITICAL)**: When asked for events or lists, show ALL matching items from the context. Do NOT summarize, truncate, or limit results. If there are 10 events, show all 10.
     
+    - **SCHEDULE/TIME QUERIES (CRITICAL)**:
+      - When asked for "next" or "after X time" schedules (buses, hours, etc.), find the FIRST item that occurs AFTER the specified time.
+      - Example: "after 8pm" means find items scheduled at 8:01 PM or later.
+      - Compare times carefully - 8:20 PM comes before 9:40 PM.
+      - Do NOT skip valid options - list the immediate next available time.
+    
     - **Formatting (CRITICAL)**:
       - Use **Markdown** for all responses.
       - **Always BOLD the keys/labels in lists** to highlight them. 
