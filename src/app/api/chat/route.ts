@@ -186,7 +186,25 @@ export async function POST(req: Request) {
     
     - **Formatting (CRITICAL)**:
       - Use **Markdown** for all responses.
-      - **Always BOLD the keys/labels in lists** to highlight them. 
+      - **Formatting Pattern**: Use **Key:** Value format (bold the key AND the colon) for ALL list items.
+      - **Explicitly BOLD these labels**: **Breakfast:**, **Lunch:**, **Dinner:**, **Late Night:**, **Monday:**, etc.
+      
+      - **USE TABLES for Structured Data**:
+        - For **Weekly Hours**, **Bus Schedules**, or **Menus**, ALWAYS use a Markdown Table.
+        - Tables are cleaner and easier to read than lists.
+      
+      **Example Table (Schedules):**
+      | Day | Hours |
+      | :--- | :--- |
+      | **Mon-Fri** | 07:30 AM - 08:00 PM |
+      | **Sat-Sun** | Closed |
+
+      **Example Table (Menus):**
+      | Station | Item | Details |
+      | :--- | :--- | :--- |
+      | **Grill** | Cheeseburger | 450 cal, w/ fries |
+      | **Entree** | Grilled Salmon | [GF] lemon butter |
+
       - Use **Bold** for important locations, terms, or emphasis.
       - **Keep responses COMPACT** - avoid excessive bullets, put details inline when possible.
       - **NEVER create empty bullet points**. Every bullet (•) MUST have text on the same line.
@@ -195,9 +213,6 @@ export async function POST(req: Request) {
       **Event Name** - Time and Date
       📍 Location
       Brief description here.
-      
-      **SCHEDULES - Use this format:**
-      **8:20 PM** - Leaves campus, arrives at GSP at 8:55 PM
       
       **WRONG - Don't do this:**
       • Event Name

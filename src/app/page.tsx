@@ -337,6 +337,12 @@ export default function Home() {
                               ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
                               a: ({...props}) => <a className="text-primary underline hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />,
                               p: ({...props}) => <p className="leading-relaxed mb-2 last:mb-0" {...props} />,
+                              table: ({...props}) => <div className="my-4 w-full overflow-hidden rounded-lg border border-border"><table className="w-full text-sm" {...props} /></div>,
+                              thead: ({...props}) => <thead className="bg-muted/50 border-b border-border" {...props} />,
+                              tbody: ({...props}) => <tbody className="[&_tr:last-child]:border-0" {...props} />,
+                              tr: ({...props}) => <tr className="border-b border-border transition-colors hover:bg-muted/50" {...props} />,
+                              th: ({...props}) => <th className="px-4 py-2 text-left font-semibold text-primary [&[align=center]]:text-center [&[align=right]]:text-right" {...props} />,
+                              td: ({...props}) => <td className="px-4 py-2 text-foreground [&[align=center]]:text-center [&[align=right]]:text-right" {...props} />,
                             }}
                           >
                             {displayContent}
