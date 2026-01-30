@@ -3,8 +3,9 @@
 // @ts-ignore
 // import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils, MapPin, Bus, Clock, Phone, Shield } from 'lucide-react';
 import { MenuModal } from '@/components/MenuModal';
+import { BusModal, HoursModal, DirectoryModal, SafetyModal } from '@/components/QuickAccessButtons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -31,6 +32,10 @@ export default function Home() {
   const [messages, setMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isBusModalOpen, setIsBusModalOpen] = useState(false);
+  const [isHoursModalOpen, setIsHoursModalOpen] = useState(false);
+  const [isDirectoryModalOpen, setIsDirectoryModalOpen] = useState(false);
+  const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState('');
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -229,26 +234,71 @@ export default function Home() {
             </div>
             <span className="text-lg font-semibold tracking-tight text-primary">RockyGPT</span>
           </div>
-          <div className="flex items-center gap-2">
-           <button
-             onClick={() => setIsMenuOpen(true)}
-             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold sm:text-sm"
-           >
-             <Utensils className="h-4 w-4" />
-             <span className="hidden sm:inline">View Menu</span>
-             <span className="sm:hidden">Menu</span>
-           </button>
-           
-           {showInstallButton && (
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* Quick Access Buttons */}
             <button
-              onClick={handleInstall}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
-              title={isIOS ? "See install instructions" : "Install RockyGPT"}
+              onClick={() => window.open('https://www.ramapo.edu/map/', '_blank')}
+              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+              title="Campus Map"
             >
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Install App</span>
+              <MapPin className="w-4 h-4" />
+              <span className="hidden lg:inline">Map</span>
             </button>
-           )}
+            <button
+              onClick={() => setIsBusModalOpen(true)}
+              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+              title="Shuttle Schedule"
+            >
+              <Bus className="w-4 h-4" />
+              <span className="hidden lg:inline">Bus</span>
+            </button>
+            <button
+              onClick={() => setIsHoursModalOpen(true)}
+              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+              title="Dining Hours"
+            >
+              <Clock className="w-4 h-4" />
+              <span className="hidden lg:inline">Hours</span>
+            </button>
+            <button
+              onClick={() => setIsDirectoryModalOpen(true)}
+              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+              title="Phone Directory"
+            >
+              <Phone className="w-4 h-4" />
+              <span className="hidden lg:inline">Directory</span>
+            </button>
+            <button
+              onClick={() => setIsSafetyModalOpen(true)}
+              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+              title="Campus Safety"
+            >
+              <Shield className="w-4 h-4" />
+              <span className="hidden lg:inline">Safety</span>
+            </button>
+            
+            {/* Divider */}
+            <div className="hidden sm:block w-px h-6 bg-border mx-1" />
+            
+            {/* Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold sm:text-sm"
+            >
+              <Utensils className="h-4 w-4" />
+              <span className="hidden sm:inline">Menu</span>
+            </button>
+           
+            {showInstallButton && (
+              <button
+                onClick={handleInstall}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
+                title={isIOS ? "See install instructions" : "Install RockyGPT"}
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Install</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -457,6 +507,10 @@ export default function Home() {
 
       {/* Modals */}
       <MenuModal isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      <BusModal isOpen={isBusModalOpen} onClose={() => setIsBusModalOpen(false)} />
+      <HoursModal isOpen={isHoursModalOpen} onClose={() => setIsHoursModalOpen(false)} />
+      <DirectoryModal isOpen={isDirectoryModalOpen} onClose={() => setIsDirectoryModalOpen(false)} />
+      <SafetyModal isOpen={isSafetyModalOpen} onClose={() => setIsSafetyModalOpen(false)} />
 
       {/* iOS Install Instructions Modal */}
       {showIOSInstructions && (
