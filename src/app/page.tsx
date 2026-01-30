@@ -14,7 +14,7 @@ function SourceCard({ title, url }: { title: string; url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-tl-2xl rounded-br-2xl rounded-bl-none bg-primary hover:bg-primary/90 transition-colors no-underline"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-tl-2xl bg-primary hover:bg-primary/90 transition-colors no-underline z-10"
     >
       <span className="text-[10px] font-medium text-white">
         {title}
@@ -191,7 +191,7 @@ export default function Home() {
 
                 <div className={`relative group max-w-[85%]`}>
                   <div
-                    className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                    className={`relative overflow-hidden rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
                       m.role === 'user'
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-white border border-border shell-bg text-foreground'
@@ -217,9 +217,9 @@ export default function Home() {
                           {cleanContent}
                         </ReactMarkdown>
 
-                        {/* Render Source Cards */}
+                        {/* Render Source Card - Absolutely positioned to bottom right */}
                         {sources.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-2 justify-end -mr-4 -mb-3 ml-4">
+                          <div className="absolute bottom-0 right-0">
                             {sources.map((source, idx) => (
                               <SourceCard key={idx} title={source.title} url={source.url} />
                             ))}
