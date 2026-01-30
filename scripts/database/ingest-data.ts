@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 const pdf = require('pdf-parse');
-import { db } from '../src/lib/db';
-import { generateEmbedding } from '../src/lib/ai/embedding';
+import { db } from '../../src/lib/db/index';
+import { generateEmbedding } from '../../src/lib/ai/embedding';
 import * as cheerio from 'cheerio';
 
 // Load environment variables
