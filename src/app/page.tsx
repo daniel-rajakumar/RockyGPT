@@ -3,7 +3,7 @@
 // @ts-ignore
 // import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -30,6 +30,16 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState('');
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Stop generation function
+  const stopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
+    }
+  };
 
   // ... (sendMessage and other existing logic remains same)
   const sendMessage = async (content: string) => {
@@ -39,6 +49,9 @@ export default function Home() {
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
+    // Create abort controller for this request
+    abortControllerRef.current = new AbortController();
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -46,6 +59,7 @@ export default function Home() {
         body: JSON.stringify({
           messages: [...messages, userMessage],
         }),
+        signal: abortControllerRef.current.signal, // Add abort signal
       });
 
       if (!response.ok) throw new Error(response.statusText);
@@ -78,10 +92,14 @@ export default function Home() {
           return newMessages;
         });
       }
-    } catch (error) {
-      console.error('Chat error:', error);
+    } catch (error: any) {
+      // Don't log error if it was an abort
+      if (error.name !== 'AbortError') {
+        console.error('Chat error:', error);
+      }
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -198,10 +216,10 @@ export default function Home() {
 
                 <div className={`relative group max-w-[85%]`}>
                   <div
-                    className={`relative overflow-hidden rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                    className={`relative overflow-hidden rounded-2xl text-sm leading-relaxed shadow-sm ${
                       m.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-white border border-border shell-bg text-foreground'
+                        ? 'bg-primary text-primary-foreground px-4 py-3'
+                        : `bg-white border border-border shell-bg text-foreground px-4 py-3 ${sources.length > 0 ? 'pb-12' : 'pb-3'}`
                     }`}
                   >
                     {m.role === 'user' ? (
@@ -277,14 +295,26 @@ export default function Home() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
-            <button
-              type="submit"
-              disabled={isLoading || !input?.trim()}
-              className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              <Send className="h-4 w-4" />
-              <span className="sr-only">Send</span>
-            </button>
+            {isLoading ? (
+              <button
+                type="button"
+                onClick={stopGeneration}
+                className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-destructive text-destructive-foreground transition-opacity hover:opacity-90"
+                title="Stop generating"
+              >
+                <Square className="h-3 w-3 fill-current" />
+                <span className="sr-only">Stop</span>
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!input?.trim()}
+                className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                <Send className="h-4 w-4" />
+                <span className="sr-only">Send</span>
+              </button>
+            )}
           </form>
           <div className="mt-2 text-center text-[10px] text-muted-foreground">
             RockyGPT can make mistakes. Check official sources.
