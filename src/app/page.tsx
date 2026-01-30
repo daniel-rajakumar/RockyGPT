@@ -149,15 +149,22 @@ export default function Home() {
               </div>
               <h2 className="text-2xl font-bold tracking-tight">How can I help you today?</h2>
               <p className="text-muted-foreground max-w-md">
-                Ask about dining hours, office locations, shuttle schedules, or campus policies.
+                Ask about dining, academics, parking, technology, events, and more!
               </p>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full mt-4">
-                 {['Where is Student Center?', 'What are dining hours?', 'How to print?', 'Contact Registrar'].map((q) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-6">
+                 {[
+                   { q: '🍔 What are dining hours?', icon: '🍽️' },
+                   { q: '🅿️ Where can I park?', icon: '🚗' },
+                   { q: '🖨️ How do I print?', icon: '💻' },
+                   { q: '📅 What events are happening?', icon: '🎉' },
+                   { q: '📞 Contact Registrar', icon: '📋' },
+                   { q: '🚌 Shuttle schedule', icon: '🚍' }
+                 ].map(({ q, icon }) => (
                     <button 
                       key={q}
-                      onClick={() => handleSuggestionClick(q)}
-                      className="text-sm p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors text-left text-muted-foreground hover:text-primary"
+                      onClick={() => handleSuggestionClick(q.replace(/^[^\s]+\s/, ''))} // Remove emoji prefix
+                      className="group flex items-center gap-3 text-sm p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 hover:shadow-md transition-all duration-200 text-left"
                     >
                       {q}
                     </button>
@@ -239,11 +246,16 @@ export default function Home() {
           
           {isLoading && (
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-background shadow-sm">
-                <Bot className="h-4 w-4" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-primary/10 shadow-sm">
+                <Bot className="h-4 w-4 text-primary animate-pulse" />
               </div>
-               <div className="px-4 py-3 text-sm text-muted-foreground animate-pulse">
-                Thinking...
+               <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-muted/50">
+                <span className="text-sm text-muted-foreground">RockyGPT is thinking</span>
+                <div className="flex gap-1">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
               </div>
             </div>
           )}

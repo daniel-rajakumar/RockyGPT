@@ -1,14 +1,105 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import { searchDocuments } from '@/lib/ai/retrieval';
+import { ratelimit, getIdentifier } from '@/lib/rate-limit';
+import { getCachedResponse, setCachedResponse, shouldCache } from '@/lib/response-cache';
 
 // Force dynamic to prevent caching
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+  const startTime = Date.now();
+  
+  // === RATE LIMITING ===
+  const identifier = getIdentifier(req);
+  const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
+  
+  if (!success) {
+    const waitTime = Math.ceil((reset - Date.now()) / 1000);
+    console.log('\x1b[33m⚠ Rate limit exceeded\x1b[0m', {
+      identifier,
+      limit,
+      resetIn: `${waitTime}s`
+    });
+    
+    return new Response(
+      JSON.stringify({ 
+        error: `Too many requests. Please wait ${waitTime} seconds and try again.`,
+        retryAfter: waitTime
+      }), 
+      { 
+        status: 429,
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-RateLimit-Limit': limit.toString(),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': new Date(reset).toISOString(),
+          'Retry-After': waitTime.toString()
+        } 
+      }
+    );
+  }
+  
+  // Log successful rate limit check
+  console.log('\x1b[36m✓ Rate limit OK\x1b[0m', {
+    identifier,
+    remaining: `${remaining}/${limit}`
+  });
+  
   try {
     const { messages } = await req.json();
-    const lastMessage = messages[messages.length - 1]; // User's latest question
+    
+    // === REQUEST VALIDATION ===
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request: messages array is required' }), 
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const lastMessage = messages[messages.length - 1];
+    
+    // Validate message content
+    if (!lastMessage?.content || typeof lastMessage.content !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request: message content is required' }), 
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Limit message length (prevent abuse)
+    const MAX_MESSAGE_LENGTH = 1000;
+    if (lastMessage.content.length > MAX_MESSAGE_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Message too long. Please keep it under ${MAX_MESSAGE_LENGTH} characters.` }), 
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Limit conversation history (prevent massive context)
+    const MAX_HISTORY = 20;
+    const trimmedMessages = messages.slice(-MAX_HISTORY);
+
+    // === RESPONSE CACHING ===
+    // Check if this is a cacheable query
+    if (shouldCache(lastMessage.content)) {
+      const cached = getCachedResponse(lastMessage.content);
+      if (cached) {
+        console.log('\x1b[35m⚡ Cache HIT\x1b[0m', {
+          query: lastMessage.content.substring(0, 50) + '...',
+          savedTime: `${Date.now() - startTime}ms`
+        });
+        
+        // Return cached response as a stream
+        return new Response(cached, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'X-Cache-Status': 'HIT'
+          }
+        });
+      }
+      console.log('\x1b[35m○ Cache MISS\x1b[0m - will cache response');
+    }
 
     // 1. Retrieve relevant documents (increased limit for comprehensive results)
     console.log(`\x1b[36mSearching for: ${lastMessage.content}\x1b[0m`);
@@ -100,7 +191,7 @@ export async function POST(req: Request) {
 
     // 4. Generate response using OpenAI (SDK 4.0)
     // Convert UI messages to Core messages if necessary (simple text content)
-    const coreMessages = messages.map((m: any) => ({
+    const coreMessages = trimmedMessages.map((m: any) => ({
       role: m.role,
       content: m.content || (m.parts ? m.parts.map((p: any) => p.text).join('') : '')
     }));
@@ -110,18 +201,65 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages: coreMessages,
       onFinish: (event) => {
-        // Log with Green color
-        console.log('\x1b[32mReceived Answer:\x1b[0m', event.text);
+        // === USAGE LOGGING ===
+        const responseTime = Date.now() - startTime;
+        console.log('\x1b[32m✓ Request Complete\x1b[0m', {
+          timestamp: new Date().toISOString(),
+          query: lastMessage.content.substring(0, 50) + (lastMessage.content.length > 50 ? '...' : ''),
+          tokensUsed: event.usage?.totalTokens || 0,
+          responseTime: `${responseTime}ms`,
+          messagesInHistory: trimmedMessages.length
+        });
+        
+        // === CACHE RESPONSE ===
+        if (shouldCache(lastMessage.content) && event.text) {
+          setCachedResponse(lastMessage.content, event.text);
+          console.log('\x1b[35m💾 Cached response\x1b[0m');
+        }
       },
     });
 
     // 5. Stream the response back
-    // 5. Stream the response back
-    // Fallback to text stream since DataStream is missing in this version
     return result.toTextStreamResponse();
 
-  } catch (error) {
+  } catch (error: any) {
+    // === BETTER ERROR HANDLING ===
     console.error('Chat API Error:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    
+    const responseTime = Date.now() - startTime;
+    console.error('\x1b[31m✗ Request Failed\x1b[0m', {
+      timestamp: new Date().toISOString(),
+      error: error.message,
+      responseTime: `${responseTime}ms`
+    });
+    
+    // Handle specific error types with user-friendly messages
+    if (error.message?.includes('rate limit') || error.status === 429) {
+      return new Response(
+        JSON.stringify({ error: 'Too many requests. Please wait a moment and try again.' }), 
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (error.message?.includes('timeout') || error.code === 'ETIMEDOUT') {
+      return new Response(
+        JSON.stringify({ error: 'Request timed out. Please try again.' }), 
+        { status: 504, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (error.message?.includes('API key') || error.status === 401) {
+      console.error('CRITICAL: API Key issue detected');
+      return new Response(
+        JSON.stringify({ error: 'Service temporarily unavailable. Please try again later.' }), 
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Generic error fallback
+    return new Response(
+      JSON.stringify({ error: 'Sorry, something went wrong. Please try again.' }), 
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }

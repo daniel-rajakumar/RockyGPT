@@ -2,37 +2,68 @@ name: Daily Data Update
 
 on:
   schedule:
-    - cron: '0 9 * * *' # Runs at 09:00 UTC (4:00 AM EST) everyday
-  workflow_dispatch: # Allows manual trigger
+    # Run every day at 6 AM EST (11 AM UTC)
+    - cron: '0 11 * * *'
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
+          cache: 'npm'
+      
       - name: Install dependencies
         run: npm ci
-
-      - name: Fetch Dining Data
-        run: npx ts-node scripts/fetch-dining.ts
-
-      - name: Commit and Push changes
+      
+      - name: Update dining menu
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add clean_data/dining/hours.md
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore: update dining hours [skip ci]"
-            git push
-          fi
+          echo "Fetching latest menu..."
+          npm run fetch:menu || echo "Menu fetch failed, continuing..."
+      
+      - name: Update events calendar
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "Fetching latest events..."
+          npm run fetch:events || echo "Events fetch failed, continuing..."
+      
+      - name: Update campus hours
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "Fetching campus hours..."
+          npm run fetch:hours || echo "Hours fetch failed, continuing..."
+      
+      - name: Re-ingest data into database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "Re-ingesting updated data..."
+          npm run ingest
+      
+      - name: Commit changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add clean_data/
+          git diff --quiet && git diff --staged --quiet || git commit -m "chore: automated data update [skip ci]"
+      
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

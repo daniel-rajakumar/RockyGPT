@@ -6,13 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "fetch:menu": "tsx scripts/fetch/birch-menu.ts",
+    "fetch:events": "tsx scripts/fetch/live-events.ts",
+    "fetch:hours": "tsx scripts/fetch/campus-hours.ts",
+    "ingest": "tsx scripts/database/ingest-data.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.12",
     "@ai-sdk/react": "^3.0.41",
     "@types/pdf-parse": "^1.1.5",
     "@types/pg": "^8.16.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.1",
     "ai": "^6.0.39",
     "axios": "^1.13.2",
     "cheerio": "^1.1.2",
