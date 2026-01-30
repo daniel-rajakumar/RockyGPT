@@ -16,9 +16,9 @@ export async function POST(req: Request) {
     
     // Define Source Mapping
     const sourceMap: Record<string, { title: string; url: string }> = {
-      'dining/menu.md': { title: 'Dining Menus', url: 'https://www.ramapo.edu/dining/menus/' },
-      'dining/hours.md': { title: 'Dining Hours', url: 'https://www.ramapo.edu/dining/hours/' },
-      'hours.md': { title: 'Campus Hours', url: 'https://www.ramapo.edu/about/hours/' },
+      'dining/menu.md': { title: 'Dining Menus', url: 'https://ramapodining.sodexomyway.com/' },
+      'dining/hours.md': { title: 'Dining Hours', url: 'https://ramapodining.sodexomyway.com/dining-near-me/hours' },
+      'campus/hours.md': { title: 'Campus Hours', url: 'https://www.ramapo.edu/about/hours/' },
       'academic/calendar.md': { title: 'Academic Calendar', url: 'https://www.ramapo.edu/academic-calendars/' },
       'campus/live-events.md': { title: 'Archway Events', url: 'https://archway.ramapo.edu/events' },
       'campus/events.md': { title: 'Campus Events', url: 'https://www.ramapo.edu/events/' },
@@ -33,6 +33,19 @@ export async function POST(req: Request) {
       'campus/technology.md': { title: 'ITS Help Desk', url: 'https://www.ramapo.edu/its/' },
       'financial_aid/README.md': { title: 'Financial Aid', url: 'https://www.ramapo.edu/finaid/' },
       'housing/README.md': { title: 'Residence Life', url: 'https://www.ramapo.edu/reslife/' },
+      // Expanded Coverage
+      'academics/README.md': { title: 'Academics', url: 'https://www.ramapo.edu/academics/' },
+      'athletics/README.md': { title: 'Athletics', url: 'https://ramapoathletics.com/' },
+      'career_services/README.md': { title: 'Cahill Career Center', url: 'https://www.ramapo.edu/careercenter/' },
+      'clubs/README.md': { title: 'Clubs & Orgs', url: 'https://www.ramapo.edu/clubs/' },
+      'events/README.md': { title: 'Campus Events', url: 'https://www.ramapo.edu/events/' },
+      'offices/README.md': { title: 'Directory', url: 'https://www.ramapo.edu/directory/' },
+      'policies/README.md': { title: 'Student Handbook', url: 'https://www.ramapo.edu/student-conduct/student-handbook/' },
+      'safety/README.md': { title: 'Public Safety', url: 'https://www.ramapo.edu/publicsafety/' },
+      'services/README.md': { title: 'Student Services', url: 'https://www.ramapo.edu/students/' },
+      'technology/README.md': { title: 'ITS Help Desk', url: 'https://www.ramapo.edu/its/' },
+      'transportation/README.md': { title: 'Transportation', url: 'https://www.ramapo.edu/transportation/' },
+      'wellness/README.md': { title: 'Health & Wellness', url: 'https://www.ramapo.edu/health/' },
       'default': { title: 'Ramapo College Website', url: 'https://www.ramapo.edu/' }
     };
 
