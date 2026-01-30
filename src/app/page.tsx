@@ -53,9 +53,18 @@ export default function Home() {
       return;
     }
 
+    // Check for ?install=true query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoInstall = urlParams.get('install') === 'true';
+
     // On iOS (not installed), always show button (can't detect via event)
     if (iOS) {
       setShowInstallButton(true);
+      
+      // Auto-show instructions if ?install=true
+      if (autoInstall) {
+        setTimeout(() => setShowIOSInstructions(true), 500);
+      }
     }
 
     // Listen for install prompt (Chrome/Edge/Android)
@@ -63,6 +72,13 @@ export default function Home() {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallButton(true);
+
+      // Auto-trigger install if ?install=true
+      if (autoInstall) {
+        setTimeout(() => {
+          e.prompt();
+        }, 500);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handler);
