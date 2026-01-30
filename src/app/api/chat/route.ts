@@ -106,10 +106,12 @@ export async function POST(req: Request) {
     const relevantDocs = await searchDocuments(lastMessage.content, 30);
     
     // Define Source Mapping
+    // Note: DB stores bare filenames (e.g., 'hours.md'), so we need mappings for both
     const sourceMap: Record<string, { title: string; url: string }> = {
-      'dining/menu.md': { title: 'Dining Menus', url: 'https://ramapodining.sodexomyway.com/' },
-      'dining/hours.md': { title: 'Dining Hours', url: 'https://ramapodining.sodexomyway.com/dining-near-me/hours' },
-      'campus/hours.md': { title: 'Campus Hours', url: 'https://www.ramapo.edu/about/hours/' },
+      // Full path mappings (for future compatibility)
+      'dining/menu.md': { title: 'Dining Menus', url: 'https://ramapo.sodexomyway.com/en-us/locations/birch-tree-inn' },
+      'dining/hours.md': { title: 'Dining Hours', url: 'https://ramapo.sodexomyway.com/en-us/locations/hours' },
+      'campus/hours.md': { title: 'Campus Hours', url: 'https://www.ramapo.edu/about/campus-hours/' },
       'academic/calendar.md': { title: 'Academic Calendar', url: 'https://www.ramapo.edu/academic-calendars/' },
       'campus/live-events.md': { title: 'Archway Events', url: 'https://archway.ramapo.edu/events' },
       'campus/events.md': { title: 'Campus Events', url: 'https://www.ramapo.edu/events/' },
@@ -137,6 +139,24 @@ export async function POST(req: Request) {
       'technology/README.md': { title: 'ITS Help Desk', url: 'https://www.ramapo.edu/its/' },
       'transportation/README.md': { title: 'Transportation', url: 'https://www.ramapo.edu/transportation/' },
       'wellness/README.md': { title: 'Health & Wellness', url: 'https://www.ramapo.edu/health/' },
+      
+      // BARE FILENAME MAPPINGS (what DB actually returns)
+      'menu.md': { title: 'Dining Menus', url: 'https://ramapo.sodexomyway.com/en-us/locations/birch-tree-inn' },
+      'hours.md': { title: 'Dining Hours', url: 'https://ramapo.sodexomyway.com/en-us/locations/hours' },
+      'calendar.md': { title: 'Academic Calendar', url: 'https://www.ramapo.edu/academic-calendars/' },
+      'live-events.md': { title: 'Archway Events', url: 'https://archway.ramapo.edu/events' },
+      'events.md': { title: 'Campus Events', url: 'https://www.ramapo.edu/events/' },
+      'tuition.md': { title: 'Tuition & Costs', url: 'https://www.ramapo.edu/student-accounts/tuition/' },
+      'parking.md': { title: 'Parking Services', url: 'https://www.ramapo.edu/publicsafety/parking/' },
+      'buildings.md': { title: 'Campus Map', url: 'https://www.ramapo.edu/map/' },
+      'office-hours.md': { title: 'Office Hours', url: 'https://www.ramapo.edu/academics/' },
+      'procedures.md': { title: 'Academic Procedures', url: 'https://www.ramapo.edu/registrar/' },
+      'directory.md': { title: 'Campus Directory', url: 'https://www.ramapo.edu/directory/' },
+      'safety.md': { title: 'Public Safety', url: 'https://www.ramapo.edu/publicsafety/' },
+      'transportation.md': { title: 'Transportation', url: 'https://www.ramapo.edu/transportation/' },
+      'technology.md': { title: 'ITS Help Desk', url: 'https://www.ramapo.edu/its/' },
+      'README.md': { title: 'Ramapo College', url: 'https://www.ramapo.edu/' },
+      
       'default': { title: 'Ramapo College Website', url: 'https://www.ramapo.edu/' }
     };
 
@@ -150,6 +170,22 @@ export async function POST(req: Request) {
       
       return `[Source: ${mapping.title} (${mapping.url})]\n${doc.content}`;
     }).join('\n\n');
+    
+    // Collect unique sources for summary
+    const uniqueSources = new Map<string, { title: string; url: string }>();
+    relevantDocs.forEach(doc => {
+      const filename = doc.metadata.source;
+      const mapping = sourceMap[filename] || 
+                      Object.entries(sourceMap).find(([key]) => filename.endsWith(key))?.[1] || 
+                      sourceMap['default'];
+      uniqueSources.set(mapping.title, mapping);
+    });
+    
+    const sourcesSummary = Array.from(uniqueSources.values())
+      .map(s => `- ${s.title}: ${s.url}`)
+      .join('\n');
+    
+    const contextWithSummary = `${context}\n\n---\nAVAILABLE SOURCES (use these exact URLs in your Sources section):\n${sourcesSummary}`;
     
     // 3. Construct system prompt
     const now = new Date();
@@ -222,8 +258,19 @@ export async function POST(req: Request) {
       • Location: Bradley Center
       • Description: Details here
     
+    - **CITATIONS (REQUIRED - CRITICAL)**:
+      - You MUST ALWAYS include a Sources section when you use information from the Context.
+      - **CRITICAL**: Copy the EXACT URL from the [Source: Title (URL)] tag in the Context. Do NOT make up or guess URLs.
+      - Use EXACTLY this format at the end of your answer (before related questions):
+        **Sources:**
+        - [Source Title](EXACT URL FROM CONTEXT)
+      - Include 1-3 sources maximum. Pick the most relevant.
+      - If no Context is provided or you don't use it, you may skip sources.
+      - Example: If context says "[Source: Dining Menus (https://ramapo.sodexomyway.com/en-us/locations/birch-tree-inn)]", 
+        output: **Sources:** - [Dining Menus](https://ramapo.sodexomyway.com/en-us/locations/birch-tree-inn)
+    
     - **RELATED QUESTIONS (REQUIRED)**:
-      - At the very end of your response, after citations, you MUST suggest 3 relevant follow-up questions.
+      - At the very end of your response, after Sources, you MUST suggest 3 relevant follow-up questions.
       - Use the delimiter '<<RELATED>>' on a new line before the questions.
       - One question per line.
       - Questions MUST be **VERY SHORT (max 6 words)** to fit in buttons.
@@ -233,7 +280,7 @@ export async function POST(req: Request) {
       [Your main answer here...]
       
       **Sources:**
-      - [Source Title](URL)
+      - [Dining Menus](https://ramapo.sodexomyway.com/en-us/locations/birch-tree-inn)
       
       <<RELATED>>
       What's the next bus?
@@ -241,7 +288,7 @@ export async function POST(req: Request) {
       Any events tonight?
     
     Context:
-    ${context}`;
+    ${contextWithSummary}`;
 
     // 4. Generate response using OpenAI (SDK 4.0)
     // Convert UI messages to Core messages if necessary (simple text content)

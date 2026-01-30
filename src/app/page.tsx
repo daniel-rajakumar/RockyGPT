@@ -8,19 +8,20 @@ import { MenuModal } from '@/components/MenuModal';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-// New component for fancy source display
+// New component for fancy source display - full width at bottom
 function SourceCard({ title, url }: { title: string; url: string }) {
   return (
     <a 
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary hover:bg-primary/90 transition-colors no-underline z-10"
+      className="flex items-center justify-center gap-1.5 w-full px-4 py-2 rounded-b-2xl bg-primary hover:bg-primary/90 transition-colors no-underline -mx-3 sm:-mx-4 -mb-3 mt-3" 
+      style={{ width: 'calc(100% + 1.5rem)' }}
     >
-      <span className="text-[10px] font-medium text-white">
+      <ExternalLink className="h-3 w-3 text-white/70" />
+      <span className="text-xs font-medium text-white">
         {title}
       </span>
-      <ExternalLink className="h-2.5 w-2.5 text-white/60" />
     </a>
   );
 }
@@ -328,13 +329,13 @@ export default function Home() {
                   </div>
 
                   <div className={`relative group w-full`}>
-                    <div
-                      className={`relative overflow-hidden rounded-2xl text-sm leading-relaxed shadow-sm ${
-                        m.role === 'user'
-                          ? 'bg-primary text-primary-foreground px-4 py-3'
-                          : `bg-white border border-border shell-bg text-foreground px-3 py-3 sm:px-4 ${sources.length > 0 ? 'pb-8 sm:pb-3' : 'pb-3'}`
-                      }`}
-                    >
+                      <div
+                        className={`relative overflow-hidden rounded-2xl text-sm leading-relaxed shadow-sm ${
+                          m.role === 'user'
+                            ? 'bg-primary text-primary-foreground px-4 py-3'
+                            : `bg-white border border-border shell-bg text-foreground px-3 py-3 sm:px-4 pb-3`
+                        }`}
+                      >
                       {m.role === 'user' ? (
                         <div className="whitespace-pre-wrap">{m.content}</div>
                       ) : (
@@ -361,14 +362,10 @@ export default function Home() {
                             {displayContent}
                           </ReactMarkdown>
 
-                          {/* Render Source Card - Adjusted position logic */}
-                          {sources.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-border flex flex-wrap gap-2">
-                              {sources.map((source, idx) => (
-                                <SourceCard key={idx} title={source.title} url={source.url} />
-                              ))}
-                            </div>
-                          )}
+                          {/* Render Source Card - Full width at bottom */}
+                          {sources.length > 0 && sources.map((source, idx) => (
+                            <SourceCard key={idx} title={source.title} url={source.url} />
+                          ))}
                         </>
                       )}
                     </div>
