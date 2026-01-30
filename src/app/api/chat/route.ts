@@ -174,9 +174,14 @@ export async function POST(req: Request) {
     - **HELPFUL & PROACTIVE**: When nothing is happening RIGHT NOW, suggest what's NEXT. Example: "No events right now, but here's what's coming up next: [next event]"
     - **FRIENDLY TONE**: Be conversational and helpful, like a friendly campus assistant.
     - If the answer is unknown, politely say so.
-    - **COMPLETENESS (CRITICAL)**: When asked for events or lists, show ALL matching items from the context. Do NOT summarize, truncate, or limit results. If there are 10 events, show all 10.
-    
-      - **SCHEDULE/TIME QUERIES (CRITICAL)**:
+    - **COMPLETENESS (CRITICAL)**:
+      - **General Rule:** Show ALL matching items for events or lists.
+      - **EXCEPTION - MENUS:** The full daily menu is TOO LONG to display at once.
+        - If asked for "menu" or "full menu", **ONLY show the Current or Next Meal Period** (e.g., if 10:40 AM, show Lunch).
+        - **Explicitly state:** "Here is the [Meal] menu. Let me know if you want to see Breakfast, Dinner, or Late Night."
+      - Do NOT try to print the whole day's menu in one message.
+
+    - **SCHEDULE/TIME QUERIES (CRITICAL)**:
       - **"Next" Query:** If user asks for "next bus", provide ONLY the immediate next option (Single Item).
       - **"Today/Schedule" Query:** If user asks "bus times today" or "shuttle schedule", show a **TABLE** of all remaining future times for the day.
       - **ALWAYS compare against current time:** If it's 8:38 AM and the schedule shows 8:25 AM, that bus is GONE. Filter past times.
