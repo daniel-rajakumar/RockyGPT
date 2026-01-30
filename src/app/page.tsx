@@ -3,7 +3,7 @@
 // @ts-ignore
 // import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -31,6 +31,60 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState('');
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // PWA Install state
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallButton, setShowInstallButton] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+
+  // Capture install prompt event
+  useEffect(() => {
+    // Check if iOS
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    setIsIOS(iOS);
+
+    // On iOS, always show button (can't detect if installed)
+    if (iOS) {
+      setShowInstallButton(true);
+    }
+
+    // Listen for install prompt (Chrome/Edge/Android)
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallButton(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+
+    // Check if already installed (non-iOS)
+    if (!iOS && window.matchMedia('(display-mode: standalone)').matches) {
+      setShowInstallButton(false);
+    }
+
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  // Handle install button click
+  const handleInstall = async () => {
+    if (isIOS) {
+      // Show iOS instructions modal
+      setShowIOSInstructions(true);
+      return;
+    }
+
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      setShowInstallButton(false);
+    }
+    
+    setDeferredPrompt(null);
+  };
 
   // Stop generation function
   const stopGeneration = () => {
@@ -152,9 +206,16 @@ export default function Home() {
             </div>
             <span className="text-lg font-semibold tracking-tight text-primary">RockyGPT</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-             <span className="hidden sm:inline-block">Ramapo College Assistant</span>
-          </div>
+          {showInstallButton && (
+            <button
+              onClick={handleInstall}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
+              title={isIOS ? "See install instructions" : "Install RockyGPT"}
+            >
+              <Download className="h-4 w-4" />
+              <span>Install App</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -321,6 +382,60 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* iOS Install Instructions Modal */}
+      {showIOSInstructions && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowIOSInstructions(false)}
+        >
+          <div 
+            className="bg-background rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold mb-4">Install RockyGPT</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Add RockyGPT to your home screen for quick access:
+            </p>
+            
+            <div className="space-y-3 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                  1
+                </div>
+                <p className="text-sm pt-0.5">
+                  Tap the <strong>Share</strong> button <span className="text-lg">⬆️</span> in Safari
+                </p>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                  2
+                </div>
+                <p className="text-sm pt-0.5">
+                  Scroll down and tap <strong>"Add to Home Screen"</strong>
+                </p>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                  3
+                </div>
+                <p className="text-sm pt-0.5">
+                  Tap <strong>"Add"</strong> in the top right
+                </p>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setShowIOSInstructions(false)}
+              className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
