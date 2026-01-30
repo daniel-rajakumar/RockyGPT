@@ -1,4 +1,4 @@
-import { db } from './src/lib/db/index';
+import { db } from '../src/lib/db/index';
 
 async function checkSources() {
   const result = await db.query('SELECT DISTINCT metadata as meta FROM documents LIMIT 20');

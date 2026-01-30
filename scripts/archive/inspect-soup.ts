@@ -36,7 +36,7 @@ if (startIndex !== -1) {
         
     } catch (e) {
         // parsing might fail if the file is truncated or has extra junk
-        console.error("Parse error (might need trimming):", e.message);
+        console.error("Parse error (might need trimming):", (e as any).message);
         // Try strict trimming
         const lastBrace = jsonStr.lastIndexOf('}');
         if (lastBrace !== -1) {
@@ -56,7 +56,7 @@ if (startIndex !== -1) {
                 }
                 findSoups(data);
             } catch (e2) {
-                console.error("Still failed", e2.message);
+                console.error("Still failed", (e2 as any).message);
             }
         }
     }
