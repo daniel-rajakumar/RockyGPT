@@ -1,5 +1,5 @@
 
-import { searchDocuments } from '../src/lib/ai/retrieval';
+import { searchDocuments } from '../../src/lib/ai/retrieval';
 import dotenv from 'dotenv';
 import path from 'path';
 
