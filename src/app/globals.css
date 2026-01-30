@@ -41,5 +41,18 @@ body {
   opacity: 1;
 }
 
+@layer base {
+  .dark {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --primary: #8E0A26;
+    --primary-foreground: #FFFFFF;
+    --muted: #262626;
+    --muted-foreground: #a1a1aa;
+    --border: #333333;
+  }
+}
+
+
 /* Make dots very subtle */
 /* Dots removed */

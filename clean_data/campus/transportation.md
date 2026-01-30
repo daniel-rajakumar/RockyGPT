@@ -78,6 +78,8 @@ Information on getting to and around campus.
 
 ### Weekday Full Service Schedule (Spring 2026)
 
+**How to read this schedule:** The "Leave Ramapo" column shows when the bus DEPARTS from campus. The "Garden State Plaza" column shows when the bus ARRIVES at that location. All buses start from Bradley Center on campus.
+
 | Leave Ramapo | Ramsey Rt 17 Train | Interstate Plaza | CityMD Ramsey | Garden State Plaza | Arrive on Campus |
 |--------------|-------------------|------------------|---------------|-------------------|------------------|
 | 7:00 AM | – | – | – | 7:30 AM | 7:55 AM |
