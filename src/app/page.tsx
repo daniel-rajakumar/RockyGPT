@@ -3,7 +3,8 @@
 // @ts-ignore
 // import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils } from 'lucide-react';
+import { MenuModal } from '@/components/MenuModal';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -28,6 +29,7 @@ export default function Home() {
   // ... (state and handlers remain same)
   const [messages, setMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState('');
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -226,16 +228,27 @@ export default function Home() {
             </div>
             <span className="text-lg font-semibold tracking-tight text-primary">RockyGPT</span>
           </div>
-          {showInstallButton && (
+          <div className="flex items-center gap-2">
+           <button
+             onClick={() => setIsMenuOpen(true)}
+             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold sm:text-sm"
+           >
+             <Utensils className="h-4 w-4" />
+             <span className="hidden sm:inline">View Menu</span>
+             <span className="sm:hidden">Menu</span>
+           </button>
+           
+           {showInstallButton && (
             <button
               onClick={handleInstall}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
               title={isIOS ? "See install instructions" : "Install RockyGPT"}
             >
               <Download className="h-4 w-4" />
-              <span>Install App</span>
+              <span className="hidden sm:inline">Install App</span>
             </button>
-          )}
+           )}
+          </div>
         </div>
       </header>
 
@@ -444,6 +457,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <MenuModal isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
 
       {/* iOS Install Instructions Modal */}
       {showIOSInstructions && (
