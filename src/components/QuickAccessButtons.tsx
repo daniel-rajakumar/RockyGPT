@@ -1,13 +1,153 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Loader2, Bus, Clock, Phone, Shield, MapPin, ExternalLink, AlertTriangle } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { X, Loader2, Bus, Clock, Phone, Shield, MapPin, ExternalLink, AlertTriangle, Calendar } from 'lucide-react';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+// ============================================
+// EVENTS MODAL - Campus Events (Styled Cards)
+// ============================================
+interface EventItem {
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  description: string;
+  link?: string;
+}
+
+const eventData: EventItem[] = [
+  {
+    title: "RMCG Hosts AMEX VP/Former BCGer",
+    date: "Thursday, Jan 29",
+    time: "6:00 PM - 7:30 PM",
+    location: "ASB 135 / Virtual",
+    description: "Ramapo Management Consulting Group hosts Joe Verde, a VP at AMEX and former BCG Project Leader. Learn about management consulting recruiting and get practical feedback.",
+    link: "https://archway.ramapo.edu/rsvp?id=1407562"
+  },
+  {
+    title: "Indoor Soccer Pickup",
+    date: "Friday, Jan 30",
+    time: "1:00 AM",
+    location: "Aux Gym - Bradley Center",
+    description: "Join us in the Bradley Center Aux Gym for our weekly indoor soccer pickup games! Arrive 10-15 mins early to sort teams.",
+    link: "https://archway.ramapo.edu/rsvp?id=1407596"
+  },
+  {
+    title: "Ice Cream Social",
+    date: "Friday, Jan 30",
+    time: "9:00 PM",
+    location: "Friends Hall",
+    description: "Join the College Programming Board for free ice cream, fun vibes, and time with friends.",
+    link: "https://archway.ramapo.edu/rsvp?id=1407821"
+  },
+  {
+    title: "Winter Warm Up",
+    date: "Saturday, Jan 31",
+    time: "4:00 PM",
+    location: "Bradley Center Lobby",
+    description: "Center for Student Involvement presents Winter Warm Up.",
+    link: "https://archway.ramapo.edu/rsvp?id=1407775"
+  },
+  {
+    title: "Men's Basketball vs. TCNJ",
+    date: "Saturday, Jan 31",
+    time: "6:00 PM",
+    location: "Bradley Center",
+    description: "Come out and support your Roadrunners! All RCNJ Students with ID are FREE!",
+    link: "https://archway.ramapo.edu/rsvp?id=1404683"
+  },
+  {
+    title: "Commuter Breakfast",
+    date: "Monday, Feb 2",
+    time: "2:00 PM",
+    location: "Student Center, 2nd Floor",
+    description: "FREE breakfast for commuters! Food served on a first come, first served basis while supplies last.",
+    link: "https://archway.ramapo.edu/rsvp?id=1407396"
+  },
+];
+
+export function EventsModal({ isOpen, onClose }: ModalProps) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="absolute inset-0" onClick={onClose} />
+      <div className="relative w-full max-w-lg max-h-[85vh] flex flex-col bg-background rounded-2xl border border-border shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
+              <Calendar className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold leading-none mb-1">Campus Events</h2>
+              <p className="text-xs text-muted-foreground font-medium">Upcoming activities</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors opacity-70 hover:opacity-100">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {eventData.map((event, idx) => (
+            <div key={idx} className="bg-muted/30 border border-border rounded-xl p-4 transition-colors hover:bg-muted/50">
+              <div className="flex justify-between items-start gap-4 mb-2">
+                <div>
+                  <h3 className="font-bold text-foreground leading-tight">{event.title}</h3>
+                  <div className="flex items-center gap-2 mt-1.5 text-xs font-medium text-primary">
+                    <span className="bg-primary/10 px-2 py-0.5 rounded text-nowrap">{event.date}</span>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground">{event.time}</span>
+                  </div>
+                </div>
+                {event.link && (
+                  <a 
+                    href={event.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 p-2 bg-background border border-border rounded-lg hover:bg-muted transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                  </a>
+                )}
+              </div>
+              
+              <div className="flex items-start gap-1.5 mb-2 text-xs text-muted-foreground">
+                <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span>{event.location}</span>
+              </div>
+
+              <p className="text-sm text-foreground/80 leading-relaxed">
+                {event.description}
+              </p>
+            </div>
+          ))}
+          
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-center">
+             <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+               View full calendar at ramapo.edu/events
+             </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ============================================
@@ -509,6 +649,7 @@ interface QuickAccessButtonsProps {
   onHoursClick: () => void;
   onDirectoryClick: () => void;
   onSafetyClick: () => void;
+  onEventsClick: () => void;
   onMenuClick: () => void;
 }
 
@@ -518,12 +659,14 @@ export function QuickAccessButtons({
   onHoursClick,
   onDirectoryClick,
   onSafetyClick,
+  onEventsClick,
   onMenuClick,
 }: QuickAccessButtonsProps) {
   const buttons = [
     { icon: MapPin, label: 'Map', onClick: onMapClick },
     { icon: Bus, label: 'Bus', onClick: onBusClick },
     { icon: Clock, label: 'Hours', onClick: onHoursClick },
+    { icon: Calendar, label: 'Events', onClick: onEventsClick },
     { icon: Phone, label: 'Directory', onClick: onDirectoryClick },
     { icon: Shield, label: 'Safety', onClick: onSafetyClick },
   ];

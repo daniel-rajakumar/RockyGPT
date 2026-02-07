@@ -3,9 +3,9 @@
 // @ts-ignore
 // import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils, MapPin, Bus, Clock, Phone, Shield } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils, MapPin, Bus, Clock, Phone, Shield, Calendar } from 'lucide-react';
 import { MenuModal } from '@/components/MenuModal';
-import { BusModal, HoursModal, DirectoryModal, SafetyModal } from '@/components/QuickAccessButtons';
+import { BusModal, HoursModal, DirectoryModal, SafetyModal, EventsModal } from '@/components/QuickAccessButtons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -36,6 +36,7 @@ export default function Home() {
   const [isHoursModalOpen, setIsHoursModalOpen] = useState(false);
   const [isDirectoryModalOpen, setIsDirectoryModalOpen] = useState(false);
   const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
+  const [isEventsModalOpen, setIsEventsModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState('');
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -259,6 +260,14 @@ export default function Home() {
             >
               <Clock className="w-4 h-4" />
               <span className="hidden lg:inline">Hours</span>
+            </button>
+            <button
+              onClick={() => setIsEventsModalOpen(true)}
+              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+              title="Campus Events"
+            >
+              <Calendar className="w-4 h-4" />
+              <span className="hidden lg:inline">Events</span>
             </button>
             <button
               onClick={() => setIsDirectoryModalOpen(true)}
@@ -511,6 +520,7 @@ export default function Home() {
       <HoursModal isOpen={isHoursModalOpen} onClose={() => setIsHoursModalOpen(false)} />
       <DirectoryModal isOpen={isDirectoryModalOpen} onClose={() => setIsDirectoryModalOpen(false)} />
       <SafetyModal isOpen={isSafetyModalOpen} onClose={() => setIsSafetyModalOpen(false)} />
+      <EventsModal isOpen={isEventsModalOpen} onClose={() => setIsEventsModalOpen(false)} />
 
       {/* iOS Install Instructions Modal */}
       {showIOSInstructions && (
