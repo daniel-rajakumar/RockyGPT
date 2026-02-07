@@ -10,7 +10,8 @@
     "fetch:menu": "tsx scripts/fetch/birch-menu.ts",
     "fetch:events": "tsx scripts/fetch/live-events.ts",
     "fetch:hours": "tsx scripts/fetch/campus-hours.ts",
-    "ingest": "tsx scripts/database/ingest-data.ts"
+    "ingest": "tsx scripts/database/ingest-data.ts",
+    "refresh": "npm run fetch:menu && npm run fetch:events && npm run fetch:hours && npm run ingest"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.12",
@@ -45,6 +46,7 @@
     "playwright": "^1.58.0",
     "prettier": "^3.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
