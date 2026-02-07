@@ -73,9 +73,14 @@ export default function Home() {
     if (!touchStart.current || !touchEnd.current) return;
     const distance = touchStart.current - touchEnd.current;
     
-    // Swipe Right (negative distance) from left edge (< 50px)
+    // Swipe Right (negative distance) from left edge (< 50px) to Open
     if (distance < -50 && (touchStart.current < 50)) {
        setIsNavOpen(true);
+    }
+
+    // Swipe Left (positive distance) to Close
+    if (distance > 50 && isNavOpen) {
+      setIsNavOpen(false);
     }
   };
 
