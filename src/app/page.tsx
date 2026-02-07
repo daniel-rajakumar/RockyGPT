@@ -3,7 +3,7 @@
 // @ts-ignore
 // import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils, MapPin, Bus, Clock, Phone, Shield, Calendar, Menu, X, Copy, RotateCcw } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils, MapPin, Bus, Clock, Phone, Shield, Calendar, Menu, X, Copy, RotateCcw, Mail } from 'lucide-react';
 import { MenuModal } from '@/components/MenuModal';
 import { BusModal, HoursModal, DirectoryModal, SafetyModal, EventsModal } from '@/components/QuickAccessButtons';
 import ReactMarkdown from 'react-markdown';
@@ -447,7 +447,23 @@ export default function Home() {
                             ul: ({...props}) => <ul className="list-disc pl-5 my-2 space-y-1" {...props} />,
                             ol: ({...props}) => <ol className="list-decimal pl-5 my-2 space-y-1" {...props} />,
                             li: ({...props}) => <li className="leading-relaxed" {...props} />,
-                            a: ({...props}) => <a className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                            a: ({href, children, ...props}) => {
+                              const isEmail = href?.startsWith('mailto:') || (typeof href === 'string' && href.includes('@'));
+                              if (isEmail) {
+                                const email = href?.replace('mailto:', '') || href;
+                                return (
+                                  <a 
+                                    href={`mailto:${email}`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/90 text-primary-foreground hover:bg-primary transition-colors text-xs font-medium no-underline"
+                                    {...props}
+                                  >
+                                    <Mail className="h-3 w-3" />
+                                    {children}
+                                  </a>
+                                );
+                              }
+                              return <a href={href} className="text-sky-400 underline hover:text-sky-300" target="_blank" rel="noopener noreferrer" {...props}>{children}</a>;
+                            },
                             p: ({...props}) => <p className="mb-3 last:mb-0" {...props} />,
                             table: ({...props}) => <div className="my-3 overflow-x-auto"><table className="w-full text-sm" {...props} /></div>,
                             thead: ({...props}) => <thead className="border-b border-border" {...props} />,
