@@ -3,7 +3,7 @@
 // @ts-ignore
 // import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils, MapPin, Bus, Clock, Phone, Shield, Calendar } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils, MapPin, Bus, Clock, Phone, Shield, Calendar, Menu, X } from 'lucide-react';
 import { MenuModal } from '@/components/MenuModal';
 import { BusModal, HoursModal, DirectoryModal, SafetyModal, EventsModal } from '@/components/QuickAccessButtons';
 import ReactMarkdown from 'react-markdown';
@@ -37,6 +37,7 @@ export default function Home() {
   const [isDirectoryModalOpen, setIsDirectoryModalOpen] = useState(false);
   const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
   const [isEventsModalOpen, setIsEventsModalOpen] = useState(false);
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState('');
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -235,69 +236,7 @@ export default function Home() {
             </div>
             <span className="text-lg font-semibold tracking-tight text-primary">RockyGPT</span>
           </div>
-          <div className="flex items-center gap-1 sm:gap-2">
-            {/* Quick Access Buttons */}
-            <button
-              onClick={() => window.open('https://www.ramapo.edu/map/', '_blank')}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-              title="Campus Map"
-            >
-              <MapPin className="w-4 h-4" />
-              <span className="hidden lg:inline">Map</span>
-            </button>
-            <button
-              onClick={() => setIsBusModalOpen(true)}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-              title="Shuttle Schedule"
-            >
-              <Bus className="w-4 h-4" />
-              <span className="hidden lg:inline">Bus</span>
-            </button>
-            <button
-              onClick={() => setIsHoursModalOpen(true)}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-              title="Dining Hours"
-            >
-              <Clock className="w-4 h-4" />
-              <span className="hidden lg:inline">Hours</span>
-            </button>
-            <button
-              onClick={() => setIsEventsModalOpen(true)}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-              title="Campus Events"
-            >
-              <Calendar className="w-4 h-4" />
-              <span className="hidden lg:inline">Events</span>
-            </button>
-            <button
-              onClick={() => setIsDirectoryModalOpen(true)}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-              title="Phone Directory"
-            >
-              <Phone className="w-4 h-4" />
-              <span className="hidden lg:inline">Directory</span>
-            </button>
-            <button
-              onClick={() => setIsSafetyModalOpen(true)}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-              title="Campus Safety"
-            >
-              <Shield className="w-4 h-4" />
-              <span className="hidden lg:inline">Safety</span>
-            </button>
-            
-            {/* Divider */}
-            <div className="hidden sm:block w-px h-6 bg-border mx-1" />
-            
-            {/* Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold sm:text-sm"
-            >
-              <Utensils className="h-4 w-4" />
-              <span className="hidden sm:inline">Menu</span>
-            </button>
-           
+          <div className="flex items-center gap-2">
             {showInstallButton && (
               <button
                 onClick={handleInstall}
@@ -308,9 +247,101 @@ export default function Home() {
                 <span className="hidden sm:inline">Install</span>
               </button>
             )}
+            
+            {/* Hamburger Menu Button - Rightmost */}
+            <button
+              onClick={() => setIsNavOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              title="Open menu"
+            >
+              <span>More</span>
+              <Menu className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </header>
+
+      {/* Navigation Sidebar */}
+      {isNavOpen && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsNavOpen(false)} />
+          
+          {/* Sidebar */}
+          <div className="absolute right-0 top-0 h-full w-72 bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+            {/* Sidebar Header */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
+                  <Bot className="h-5 w-5" />
+                </div>
+                <span className="text-lg font-semibold text-primary">RockyGPT</span>
+              </div>
+              <button onClick={() => setIsNavOpen(false)} className="p-2 hover:bg-muted rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Sidebar Content */}
+            <div className="flex-1 overflow-y-auto py-4">
+              <div className="px-3 mb-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase px-3">Quick Access</p>
+              </div>
+              <nav className="space-y-1 px-3">
+                <button
+                  onClick={() => { window.open('https://www.ramapo.edu/map/', '_blank'); setIsNavOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <MapPin className="w-5 h-5 text-muted-foreground" />
+                  Campus Map
+                </button>
+                <button
+                  onClick={() => { setIsBusModalOpen(true); setIsNavOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <Bus className="w-5 h-5 text-muted-foreground" />
+                  Shuttle Schedule
+                </button>
+                <button
+                  onClick={() => { setIsHoursModalOpen(true); setIsNavOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <Clock className="w-5 h-5 text-muted-foreground" />
+                  Dining Hours
+                </button>
+                <button
+                  onClick={() => { setIsEventsModalOpen(true); setIsNavOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <Calendar className="w-5 h-5 text-muted-foreground" />
+                  Campus Events
+                </button>
+                <button
+                  onClick={() => { setIsDirectoryModalOpen(true); setIsNavOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <Phone className="w-5 h-5 text-muted-foreground" />
+                  Phone Directory
+                </button>
+                <button
+                  onClick={() => { setIsSafetyModalOpen(true); setIsNavOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <Shield className="w-5 h-5 text-muted-foreground" />
+                  Campus Safety
+                </button>
+                <button
+                  onClick={() => { setIsMenuOpen(true); setIsNavOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <Utensils className="w-5 h-5 text-muted-foreground" />
+                  Dining Menu
+                </button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1 overflow-auto pb-32 pt-6">
         <div className="container max-w-2xl mx-auto px-4 flex flex-col gap-6">
