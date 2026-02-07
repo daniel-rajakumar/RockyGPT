@@ -56,32 +56,101 @@ export default function Home() {
   const [input, setInput] = useState('');
   const abortControllerRef = useRef<AbortController | null>(null);
   
-  // Swipe gesture state
-  const touchStart = useRef<number | null>(null);
-  const touchEnd = useRef<number | null>(null);
+  // Swipe/Drag gesture state
+  const touchStart = useRef<{ x: number, y: number } | null>(null);
+  const touchCurrent = useRef<{ x: number, y: number } | null>(null);
+  const [dragOffset, setDragOffset] = useState<number>(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const SIDEBAR_WIDTH = 288; // w-72 = 18rem = 288px
 
   const onTouchStart = (e: React.TouchEvent) => {
-    touchEnd.current = null;
-    touchStart.current = e.targetTouches[0].clientX;
+    touchStart.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
+    touchCurrent.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
+    
+    // Reset dragging state on new touch
+    // We don't set isDragging=true immediately anymore to allow for vertical scrolling detection
+    setIsDragging(false);
+    setDragOffset(0);
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    touchEnd.current = e.targetTouches[0].clientX;
+    if (touchStart.current === null) return;
+    
+    const currentX = e.targetTouches[0].clientX;
+    const currentY = e.targetTouches[0].clientY;
+    touchCurrent.current = { x: currentX, y: currentY };
+    
+    const deltaX = currentX - touchStart.current.x;
+    const deltaY = currentY - touchStart.current.y;
+    
+    // Detection logic:
+    // 1. If not yet dragging, check if gesture is horizontal enough
+    if (!isDragging) {
+      // Threshold to start drag (e.g. 10px) to distinguish from tap/micro-movement
+      if (Math.abs(deltaX) > 10) {
+        // Check angle/dominance: Horizontal move should be dominant
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          // It's a horizontal swipe
+          // If closed: allow opening (dragging right, deltaX > 0)
+          // If open: allow closing (dragging left, deltaX < 0) or over-dragging (bounce effect)
+          
+          if (!isNavOpen && deltaX > 0) {
+             setIsDragging(true);
+          } else if (isNavOpen) {
+             setIsDragging(true);
+          }
+        }
+      }
+    }
+    
+    // 2. If dragging, update offset
+    if (isDragging) {
+      // Prevent interactions check if browsers support passive: false defaults in React
+      // e.preventDefault(); might cause issues with scrolling if not handled carefully, 
+      // typically we just let the UI update.
+      
+      let newOffset = 0;
+      if (isNavOpen) {
+        // Dragging close (left) - max drag left is -SIDEBAR_WIDTH
+        newOffset = Math.min(0, Math.max(-SIDEBAR_WIDTH, deltaX));
+      } else {
+        // Dragging open (right) - max drag right is SIDEBAR_WIDTH
+        // Note: deltaX is total distance from start.
+        newOffset = Math.max(0, Math.min(SIDEBAR_WIDTH, deltaX));
+      }
+      
+      setDragOffset(newOffset);
+    }
   };
 
   const onTouchEnd = () => {
-    if (!touchStart.current || !touchEnd.current) return;
-    const distance = touchStart.current - touchEnd.current;
+    if (touchStart.current === null || touchCurrent.current === null) {
+         setIsDragging(false);
+         setDragOffset(0);
+         return;
+    }
     
-    // Swipe Right (negative distance) from left edge (< 50px) to Open
-    if (distance < -50 && (touchStart.current < 50)) {
-       setIsNavOpen(true);
+    if (isDragging) {
+        const deltaX = touchCurrent.current.x - touchStart.current.x;
+        const threshold = SIDEBAR_WIDTH * 0.25; // 25% threshold
+        
+        if (isNavOpen) {
+          // If was open, and dragged left significantly -> Close
+          if (deltaX < -threshold) {
+            setIsNavOpen(false);
+          }
+        } else {
+           // If was closed, and dragged right significantly -> Open
+           if (deltaX > threshold) {
+             setIsNavOpen(true);
+           }
+        }
     }
-
-    // Swipe Left (positive distance) to Close
-    if (distance > 50 && isNavOpen) {
-      setIsNavOpen(false);
-    }
+    
+    setIsDragging(false);
+    setDragOffset(0);
+    touchStart.current = null;
+    touchCurrent.current = null;
   };
 
   // PWA Install state
@@ -315,87 +384,133 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Navigation Sidebar */}
-      {isNavOpen && (
-        <div className="fixed inset-0 z-[60]">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsNavOpen(false)} />
+      {/* Navigation Sidebar - Always rendered for transition */}
+      <div 
+        className={`fixed inset-0 z-[60] transition-all duration-300 ${
+          // When dragging, we handle visibility/pointer-events manually or keep them enabled if drag started
+          (isNavOpen || isDragging) ? 'pointer-events-auto' : 'pointer-events-none'
+        }`}
+      >
+        {/* Backdrop */}
+        <div 
+          className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+            // Opacity logic:
+            // If dragging open: opacity increases from 0 -> 1 based on dragOffset
+            // If dragging close: opacity decreases from 1 -> 0
+            // For simplicity with CSS transitions mixed with drag, let's keep it simple:
+            // If dragging, we might want to disable transition and set opacity manually? 
+            // Or just keep simple transition logic: if dragging > 0, show backdrop?
+            // Let's stick to simple boolean for backdrop visibility during drag for now to minimize complexity, 
+            // or we can calculate opacity based on dragOffset.
+            // Simplified: if open OR dragging > 50px/open-direction, show it? 
+            // Actually, let's rely on standard transition for backdrop unless we want perfect sync.
+            // Perfect sync would require inline style opacity. 
+            isNavOpen || (isDragging && Math.abs(dragOffset) > 0) ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{
+             // Optional: Interactive backdrop opacity
+             opacity: isDragging 
+                ? (isNavOpen ? 1 + (dragOffset / SIDEBAR_WIDTH) : (dragOffset / SIDEBAR_WIDTH)) 
+                : undefined,
+             transition: isDragging ? 'none' : undefined
+          }}
+          onClick={() => !isDragging && setIsNavOpen(false)} 
+        />
+        
+        {/* Sidebar */}
+        <div 
+          className={`absolute left-0 top-0 h-full w-72 bg-background border-r border-border shadow-2xl flex flex-col will-change-transform ${
+            // If NOT dragging, use transition class. If dragging, remove it to follow finger instantly.
+            !isDragging ? 'transition-transform duration-300 ease-out' : ''
+          } ${
+             // Base class for open/closed state handled by translate-x below, 
+             // but we keep these for accessible defaults/hydration
+             isNavOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+          style={{
+            // Apply drag offset transform
+            // If closed: start at -100% (-288px) + dragOffset (positive)
+            // If open: start at 0 + dragOffset (negative)
+            transform: isDragging 
+              ? (isNavOpen 
+                  ? `translateX(${dragOffset}px)` 
+                  : `translateX(calc(-100% + ${dragOffset}px))`)
+              : undefined
+          }}
+        >
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
+                <Bot className="h-5 w-5" />
+              </div>
+              <span className="text-lg font-semibold text-primary">RockyGPT</span>
+            </div>
+            <button onClick={() => setIsNavOpen(false)} className="p-2 hover:bg-muted rounded-lg transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
           
-          {/* Sidebar */}
-          <div className="absolute left-0 top-0 h-full w-72 bg-background border-r border-border shadow-2xl flex flex-col animate-in slide-in-from-left duration-200">
-            {/* Sidebar Header */}
-            <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
-                  <Bot className="h-5 w-5" />
-                </div>
-                <span className="text-lg font-semibold text-primary">RockyGPT</span>
-              </div>
-              <button onClick={() => setIsNavOpen(false)} className="p-2 hover:bg-muted rounded-lg transition-colors">
-                <X className="w-5 h-5" />
+          {/* Sidebar Content */}
+          <div className="flex-1 overflow-y-auto py-4">
+            <div className="px-3 mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase px-3">Quick Access</p>
+            </div>
+            <nav className="space-y-1 px-3">
+              <button
+                onClick={() => { window.open('https://www.ramapo.edu/map/', '_blank'); setIsNavOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+                title="Open Campus Map"
+              >
+                <MapPin className="w-5 h-5 text-muted-foreground" />
+                Campus Map
               </button>
-            </div>
-            
-            {/* Sidebar Content */}
-            <div className="flex-1 overflow-y-auto py-4">
-              <div className="px-3 mb-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase px-3">Quick Access</p>
-              </div>
-              <nav className="space-y-1 px-3">
-                <button
-                  onClick={() => { window.open('https://www.ramapo.edu/map/', '_blank'); setIsNavOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <MapPin className="w-5 h-5 text-muted-foreground" />
-                  Campus Map
-                </button>
-                <button
-                  onClick={() => { setIsBusModalOpen(true); setIsNavOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <Bus className="w-5 h-5 text-muted-foreground" />
-                  Shuttle Schedule
-                </button>
-                <button
-                  onClick={() => { setIsHoursModalOpen(true); setIsNavOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <Clock className="w-5 h-5 text-muted-foreground" />
-                  Dining Hours
-                </button>
-                <button
-                  onClick={() => { setIsEventsModalOpen(true); setIsNavOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <Calendar className="w-5 h-5 text-muted-foreground" />
-                  Campus Events
-                </button>
-                <button
-                  onClick={() => { setIsDirectoryModalOpen(true); setIsNavOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <Phone className="w-5 h-5 text-muted-foreground" />
-                  Phone Directory
-                </button>
-                <button
-                  onClick={() => { setIsSafetyModalOpen(true); setIsNavOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <Shield className="w-5 h-5 text-muted-foreground" />
-                  Campus Safety
-                </button>
-                <button
-                  onClick={() => { setIsMenuOpen(true); setIsNavOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <Utensils className="w-5 h-5 text-muted-foreground" />
-                  Dining Menu
-                </button>
-              </nav>
-            </div>
+              <button
+                onClick={() => { setIsBusModalOpen(true); setIsNavOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <Bus className="w-5 h-5 text-muted-foreground" />
+                Shuttle Schedule
+              </button>
+              <button
+                onClick={() => { setIsHoursModalOpen(true); setIsNavOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <Clock className="w-5 h-5 text-muted-foreground" />
+                Dining Hours
+              </button>
+              <button
+                onClick={() => { setIsEventsModalOpen(true); setIsNavOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <Calendar className="w-5 h-5 text-muted-foreground" />
+                Campus Events
+              </button>
+              <button
+                onClick={() => { setIsDirectoryModalOpen(true); setIsNavOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <Phone className="w-5 h-5 text-muted-foreground" />
+                Phone Directory
+              </button>
+              <button
+                onClick={() => { setIsSafetyModalOpen(true); setIsNavOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <Shield className="w-5 h-5 text-muted-foreground" />
+                Campus Safety
+              </button>
+              <button
+                onClick={() => { setIsMenuOpen(true); setIsNavOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <Utensils className="w-5 h-5 text-muted-foreground" />
+                Dining Menu
+              </button>
+            </nav>
           </div>
         </div>
-      )}
+      </div>
 
       <main className="flex-1 overflow-auto pb-32 pt-6">
         <div className="container max-w-2xl mx-auto px-4 flex flex-col gap-6">
