@@ -370,15 +370,7 @@ export default function Home() {
                 <span>Install</span>
               </button>
             ) : (
-              <div className="animate-in fade-in zoom-in duration-300">
-                <button
-                  onClick={() => setIsMenuOpen(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold sm:text-sm"
-                >
-                  <Utensils className="h-4 w-4" />
-                  <span className="hidden sm:inline">Menu</span>
-                </button>
-              </div>
+              <div className="w-9" />
             )}
           </div>
         </div>
