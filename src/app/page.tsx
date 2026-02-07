@@ -27,6 +27,20 @@ function SourceCard({ title, url }: { title: string; url: string }) {
   );
 }
 
+// Helper to auto-link phone numbers
+const linkSmartChips = (text: string) => {
+  // Regex for phone numbers: (123) 456-7890, 123-456-7890, 123.456.7890
+  // Negative lookbehind ensures we don't double-link existing markdown links
+  const phoneRegex = /(?<!\[|\]\(|tel:|href=")(\+?1[\s\.-]?)?\(?\d{3}\)?[\s\.-]?\d{3}[\s\.-]?\d{4}(?!\))/g;
+  return text.replace(phoneRegex, (match) => {
+    // Basic validation to avoid linking things that look like phone numbers but aren't (e.g. dates)
+    if (match.includes('-') || match.includes('.') || match.includes('(')) {
+       return `[${match}](tel:${match.replace(/\D/g, '')})`; 
+    }
+    return match;
+  });
+};
+
 export default function Home() {
   // ... (state and handlers remain same)
   const [messages, setMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string }>>([]);
@@ -42,6 +56,29 @@ export default function Home() {
   const [input, setInput] = useState('');
   const abortControllerRef = useRef<AbortController | null>(null);
   
+  // Swipe gesture state
+  const touchStart = useRef<number | null>(null);
+  const touchEnd = useRef<number | null>(null);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchEnd.current = null;
+    touchStart.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEnd.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart.current || !touchEnd.current) return;
+    const distance = touchStart.current - touchEnd.current;
+    
+    // Swipe Right (negative distance) from left edge (< 50px)
+    if (distance < -50 && (touchStart.current < 50)) {
+       setIsNavOpen(true);
+    }
+  };
+
   // PWA Install state
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
@@ -227,7 +264,12 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen relative font-sans">
+    <div 
+      className="flex flex-col min-h-screen relative font-sans"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       <header className="sticky top-0 z-50 bg-background">
         <div className="container flex h-14 max-w-2xl mx-auto items-center justify-between px-4">
           {/* Left: Hamburger */}
@@ -247,13 +289,22 @@ export default function Home() {
             {showInstallButton ? (
               <button
                 onClick={handleInstall}
-                className="flex items-center justify-center p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium animate-in fade-in zoom-in duration-300"
                 title={isIOS ? "See install instructions" : "Install RockyGPT"}
               >
-                <Download className="h-5 w-5" />
+                <Download className="h-4 w-4" />
+                <span>Install</span>
               </button>
             ) : (
-              <div className="w-9" /> 
+              <div className="animate-in fade-in zoom-in duration-300">
+                <button
+                  onClick={() => setIsMenuOpen(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold sm:text-sm"
+                >
+                  <Utensils className="h-4 w-4" />
+                  <span className="hidden sm:inline">Menu</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -439,6 +490,10 @@ export default function Home() {
                       <div className="text-[15px] leading-7 text-foreground prose prose-invert prose-sm max-w-none">
                         <ReactMarkdown 
                           remarkPlugins={[remarkGfm]}
+                          urlTransform={(url) => {
+                            if (url.startsWith('tel:') || url.startsWith('mailto:')) return url;
+                            return url.startsWith('http') || url.startsWith('/') ? url : url;
+                          }}
                           components={{
                             strong: ({...props}) => <strong className="font-semibold text-foreground" {...props} />,
                             h1: ({...props}) => <h1 className="text-xl font-semibold mt-4 mb-2" {...props} />,
@@ -448,20 +503,37 @@ export default function Home() {
                             ol: ({...props}) => <ol className="list-decimal pl-5 my-2 space-y-1" {...props} />,
                             li: ({...props}) => <li className="leading-relaxed" {...props} />,
                             a: ({href, children, ...props}) => {
-                              const isEmail = href?.startsWith('mailto:') || (typeof href === 'string' && href.includes('@'));
+                              const isEmail = href?.startsWith('mailto:') || (typeof href === 'string' && href.includes('@') && !href.startsWith('http'));
+                              const isPhone = href?.startsWith('tel:') || (typeof href === 'string' && /^[\d\-\+\(\)\s]+$/.test(href?.trim() || '') && (href?.trim() || '').length > 7);
+
                               if (isEmail) {
                                 const email = href?.replace('mailto:', '') || href;
                                 return (
                                   <a 
                                     href={`mailto:${email}`}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/90 text-primary-foreground hover:bg-primary transition-colors text-xs font-medium no-underline"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/90 text-primary-foreground hover:bg-primary transition-colors text-xs font-medium no-underline ml-1"
                                     {...props}
                                   >
                                     <Mail className="h-3 w-3" />
-                                    {children}
-                                  </a>
-                                );
-                              }
+                                     {children}
+                                   </a>
+                                 );
+                               }
+                               
+                               if (isPhone) {
+                                 const phone = href?.replace('tel:', '') || href;
+                                 return (
+                                   <a 
+                                     href={`tel:${phone}`}
+                                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/90 text-primary-foreground hover:bg-primary transition-colors text-xs font-medium no-underline ml-1"
+                                     {...props}
+                                   >
+                                     <Phone className="h-3 w-3" />
+                                     {children}
+                                   </a>
+                                 );
+                               }
+                              
                               return <a href={href} className="text-sky-400 underline hover:text-sky-300" target="_blank" rel="noopener noreferrer" {...props}>{children}</a>;
                             },
                             p: ({...props}) => <p className="mb-3 last:mb-0" {...props} />,
@@ -473,7 +545,7 @@ export default function Home() {
                             td: ({...props}) => <td className="px-3 py-2 text-muted-foreground" {...props} />,
                           }}
                         >
-                          {displayContent}
+                          {linkSmartChips(displayContent)}
                         </ReactMarkdown>
                       </div>
 
