@@ -414,84 +414,95 @@ export default function Home() {
             return (
               <div
                 key={m.id}
-                className={`flex flex-col gap-2 ${
-                  m.role === 'user' ? 'items-end' : 'items-start'
+                className={`flex flex-col gap-4 ${
+                  m.role === 'user' ? 'items-end' : 'items-start w-full'
                 }`}
               >
                 {m.role === 'user' ? (
                   /* User message - dark pill on right */
-                  <div className="max-w-[85%]">
-                    <div className="inline-block px-4 py-3 rounded-3xl bg-muted text-foreground text-sm">
+                  <div className="max-w-[80%]">
+                    <div className="px-4 py-2.5 rounded-2xl bg-muted/80 text-foreground text-[15px]">
                       {m.content}
                     </div>
                   </div>
                 ) : (
                   /* Assistant message - Gemini style */
-                  <div className="flex items-start gap-3 max-w-full">
+                  <div className="flex gap-3 w-full">
                     {/* Sparkle icon */}
-                    <div className="flex-shrink-0 mt-1">
+                    <div className="flex-shrink-0 pt-0.5">
                       <Sparkles className="h-5 w-5 text-blue-400" />
                     </div>
                     
-                    {/* Message content and actions */}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm leading-relaxed text-foreground">
+                    {/* Message content */}
+                    <div className="flex-1 min-w-0 space-y-4">
+                      {/* Main text content */}
+                      <div className="text-[15px] leading-7 text-foreground prose prose-invert prose-sm max-w-none">
                         <ReactMarkdown 
                           remarkPlugins={[remarkGfm]}
                           components={{
-                            strong: ({...props}) => <span className="font-bold text-primary" {...props} />,
-                            h1: ({...props}) => <h1 className="font-bold text-2xl text-primary mt-3 mb-1" {...props} />,
-                            h2: ({...props}) => <h2 className="font-bold text-xl text-primary mt-2 mb-1" {...props} />,
-                            h3: ({...props}) => <h3 className="font-bold text-lg text-primary mt-2 mb-1" {...props} />,
-                            ul: ({...props}) => <ul className="list-disc list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
-                            ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
-                            a: ({...props}) => <a className="text-primary underline hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />,
-                            p: ({...props}) => <p className="leading-relaxed mb-2 last:mb-0" {...props} />,
-                            table: ({...props}) => <div className="my-4 w-full overflow-x-auto rounded-lg border border-border"><table className="w-full text-sm" {...props} /></div>,
-                            thead: ({...props}) => <thead className="bg-muted/50 border-b border-border" {...props} />,
-                            tbody: ({...props}) => <tbody className="[&_tr:last-child]:border-0" {...props} />,
-                            tr: ({...props}) => <tr className="border-b border-border transition-colors hover:bg-muted/50" {...props} />,
-                            th: ({...props}) => <th className="px-4 py-2 text-left font-semibold text-primary whitespace-nowrap [&[align=center]]:text-center [&[align=right]]:text-right" {...props} />,
-                            td: ({...props}) => <td className="px-4 py-2 text-foreground [&[align=center]]:text-center [&[align=right]]:text-right" {...props} />,
+                            strong: ({...props}) => <strong className="font-semibold text-foreground" {...props} />,
+                            h1: ({...props}) => <h1 className="text-xl font-semibold mt-4 mb-2" {...props} />,
+                            h2: ({...props}) => <h2 className="text-lg font-semibold mt-3 mb-2" {...props} />,
+                            h3: ({...props}) => <h3 className="text-base font-semibold mt-2 mb-1" {...props} />,
+                            ul: ({...props}) => <ul className="list-disc pl-5 my-2 space-y-1" {...props} />,
+                            ol: ({...props}) => <ol className="list-decimal pl-5 my-2 space-y-1" {...props} />,
+                            li: ({...props}) => <li className="leading-relaxed" {...props} />,
+                            a: ({...props}) => <a className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                            p: ({...props}) => <p className="mb-3 last:mb-0" {...props} />,
+                            table: ({...props}) => <div className="my-3 overflow-x-auto"><table className="w-full text-sm" {...props} /></div>,
+                            thead: ({...props}) => <thead className="border-b border-border" {...props} />,
+                            tbody: ({...props}) => <tbody {...props} />,
+                            tr: ({...props}) => <tr className="border-b border-border/50" {...props} />,
+                            th: ({...props}) => <th className="px-3 py-2 text-left font-medium text-foreground" {...props} />,
+                            td: ({...props}) => <td className="px-3 py-2 text-muted-foreground" {...props} />,
                           }}
                         >
                           {displayContent}
                         </ReactMarkdown>
-
-                        {/* Render Source Card */}
-                        {sources.length > 0 && sources.map((source, idx) => (
-                          <SourceCard key={idx} title={source.title} url={source.url} />
-                        ))}
                       </div>
-                      
-                      {/* Gemini-style action buttons */}
-                      <div className="flex items-center gap-1 mt-3">
+
+                      {/* Action row with source links */}
+                      <div className="flex items-center gap-4 text-muted-foreground flex-wrap">
                         <button 
                           onClick={() => navigator.clipboard.writeText(m.content)}
-                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                          className="hover:text-foreground transition-colors"
                           title="Copy"
                         >
                           <Copy className="h-4 w-4" />
                         </button>
                         <FeedbackButtons messageId={m.id} content={m.content} />
+                        
+                        {/* Source links inline */}
+                        {sources.length > 0 && sources.map((source, idx) => (
+                          <a 
+                            key={idx}
+                            href={source.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/90 text-primary-foreground hover:bg-primary transition-colors text-xs font-medium"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            {source.title}
+                          </a>
+                        ))}
                       </div>
+                      
+                      {/* Related Questions */}
+                      {relatedQuestions.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-2">
+                          {relatedQuestions.map((q, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => handleSuggestionClick(q)}
+                              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/60 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            >
+                              <Sparkles className="w-3 h-3 opacity-60" />
+                              {q}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-
-                {/* Related Questions Chips */}
-                {relatedQuestions.length > 0 && (
-                  <div className="pl-11 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                    {relatedQuestions.map((q, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSuggestionClick(q)}
-                        className="inline-flex items-center px-3 py-2 rounded-2xl bg-background border border-primary/20 text-xs font-medium text-primary hover:bg-primary/5 hover:border-primary transition-colors cursor-pointer shadow-sm text-left h-auto"
-                      >
-                       <Sparkles className="w-3 h-3 mr-2 opacity-70 shrink-0" />
-                       {q}
-                      </button>
-                    ))}
                   </div>
                 )}
               </div>
@@ -641,15 +652,21 @@ function FeedbackButtons({ messageId, content }: { messageId: string; content: s
     }
   };
 
-  if (voted) return <div className="mt-1 text-xs text-muted-foreground">Thanks!</div>;
+  if (voted) return <span className="text-xs text-muted-foreground">Thanks!</span>;
 
   return (
-    <div className="mt-1 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-      <button onClick={() => handleVote('up')} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
-        <ThumbsUp className="h-3 w-3" />
+    <div className="flex items-center gap-3">
+      <button 
+        onClick={() => handleVote('up')} 
+        className="text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ThumbsUp className="h-3.5 w-3.5" />
       </button>
-      <button onClick={() => handleVote('down')} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
-        <ThumbsDown className="h-3 w-3" />
+      <button 
+        onClick={() => handleVote('down')} 
+        className="text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ThumbsDown className="h-3.5 w-3.5" />
       </button>
     </div>
   );
