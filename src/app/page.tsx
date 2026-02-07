@@ -426,15 +426,15 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
-                  /* Assistant message - Gemini style */
-                  <div className="flex gap-3 w-full">
-                    {/* Sparkle icon */}
-                    <div className="flex-shrink-0 pt-0.5">
-                      <Sparkles className="h-5 w-5 text-blue-400" />
+                  /* Assistant message - Gemini style with icon on top */
+                  <div className="flex flex-col gap-3 w-full">
+                    {/* Sparkle icon on its own row */}
+                    <div className="flex items-center">
+                      <Sparkles className="h-5 w-5 text-white" />
                     </div>
                     
                     {/* Message content */}
-                    <div className="flex-1 min-w-0 space-y-4">
+                    <div className="space-y-4">
                       {/* Main text content */}
                       <div className="text-[15px] leading-7 text-foreground prose prose-invert prose-sm max-w-none">
                         <ReactMarkdown 
@@ -447,7 +447,7 @@ export default function Home() {
                             ul: ({...props}) => <ul className="list-disc pl-5 my-2 space-y-1" {...props} />,
                             ol: ({...props}) => <ol className="list-decimal pl-5 my-2 space-y-1" {...props} />,
                             li: ({...props}) => <li className="leading-relaxed" {...props} />,
-                            a: ({...props}) => <a className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                            a: ({...props}) => <a className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
                             p: ({...props}) => <p className="mb-3 last:mb-0" {...props} />,
                             table: ({...props}) => <div className="my-3 overflow-x-auto"><table className="w-full text-sm" {...props} /></div>,
                             thead: ({...props}) => <thead className="border-b border-border" {...props} />,
@@ -512,7 +512,7 @@ export default function Home() {
           {isLoading && messages[messages.length - 1]?.role === 'user' && (
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 mt-1">
-                <Sparkles className="h-5 w-5 text-blue-400 animate-pulse" />
+                <Sparkles className="h-5 w-5 text-white animate-pulse" />
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">RockyGPT is thinking</span>
