@@ -3,7 +3,7 @@
 // @ts-ignore
 // import { useChat } from '@ai-sdk/react';
 import { useState, useRef, useEffect } from 'react';
-import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils, MapPin, Bus, Clock, Phone, Shield, Calendar, Menu, X } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send, Bot, User, Sparkles, ExternalLink, Square, Download, Utensils, MapPin, Bus, Clock, Phone, Shield, Calendar, Menu, X, Copy, RotateCcw } from 'lucide-react';
 import { MenuModal } from '@/components/MenuModal';
 import { BusModal, HoursModal, DirectoryModal, SafetyModal, EventsModal } from '@/components/QuickAccessButtons';
 import ReactMarkdown from 'react-markdown';
@@ -228,47 +228,45 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen relative font-sans">
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 max-w-2xl mx-auto items-center justify-between px-4">
+      <header className="sticky top-0 z-50 bg-background">
+        <div className="container flex h-14 max-w-2xl mx-auto items-center justify-between px-4">
+          {/* Left: Hamburger */}
+          <button
+            onClick={() => setIsNavOpen(true)}
+            className="flex items-center justify-center p-2 text-muted-foreground hover:text-foreground transition-colors"
+            title="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          
+          {/* Center: Title */}
+          <span className="text-lg font-semibold tracking-tight">RockyGPT</span>
+          
+          {/* Right: Install or placeholder */}
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
-              <Bot className="h-5 w-5" />
-            </div>
-            <span className="text-lg font-semibold tracking-tight text-primary">RockyGPT</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {showInstallButton && (
+            {showInstallButton ? (
               <button
                 onClick={handleInstall}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
+                className="flex items-center justify-center p-2 text-muted-foreground hover:text-foreground transition-colors"
                 title={isIOS ? "See install instructions" : "Install RockyGPT"}
               >
-                <Download className="h-4 w-4" />
-                <span className="hidden sm:inline">Install</span>
+                <Download className="h-5 w-5" />
               </button>
+            ) : (
+              <div className="w-9" /> 
             )}
-            
-            {/* Hamburger Menu Button - Rightmost */}
-            <button
-              onClick={() => setIsNavOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-              title="Open menu"
-            >
-              <span>More</span>
-              <Menu className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </header>
 
       {/* Navigation Sidebar */}
       {isNavOpen && (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-[60]">
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsNavOpen(false)} />
           
           {/* Sidebar */}
-          <div className="absolute right-0 top-0 h-full w-72 bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+          <div className="absolute left-0 top-0 h-full w-72 bg-background border-r border-border shadow-2xl flex flex-col animate-in slide-in-from-left duration-200">
             {/* Sidebar Header */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-border">
               <div className="flex items-center gap-2">
@@ -346,32 +344,47 @@ export default function Home() {
       <main className="flex-1 overflow-auto pb-32 pt-6">
         <div className="container max-w-2xl mx-auto px-4 flex flex-col gap-6">
           {messages.length === 0 && (
-            <div className="my-12 flex flex-col items-center justify-center gap-4 text-center">
-              <div className="rounded-full bg-muted p-4">
-                <Sparkles className="h-8 w-8 text-primary" />
+            <div className="flex flex-col gap-8 pt-8">
+              {/* Greeting */}
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-lg">Hi there</p>
+                <h1 className="text-3xl font-semibold tracking-tight">What can I help with?</h1>
               </div>
-              <h2 className="text-2xl font-bold tracking-tight">How can I help you today?</h2>
-              <p className="text-muted-foreground max-w-md">
-                Ask about dining, academics, parking, technology, events, and more!
-              </p>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-6">
-                 {[
-                   { q: '🍔 What are dining hours?', icon: '🍽️' },
-                   { q: '🅿️ Where can I park?', icon: '🚗' },
-                   { q: '🖨️ How do I print?', icon: '💻' },
-                   { q: '📅 What events are happening?', icon: '🎉' },
-                   { q: '📞 Contact Registrar', icon: '📋' },
-                   { q: '🚌 Shuttle schedule', icon: '🚍' }
-                 ].map(({ q, icon }) => (
-                    <button 
-                      key={q}
-                      onClick={() => handleSuggestionClick(q.replace(/^[^\s]+\s/, ''))} // Remove emoji prefix
-                      className="group flex items-center gap-3 text-sm p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 hover:shadow-md transition-all duration-200 text-left"
-                    >
-                      {q}
-                    </button>
-                 ))}
+              {/* Suggestion prompts with bullets */}
+              <div className="space-y-3">
+                {[
+                  { q: "What's on the menu today?", color: 'bg-purple-500' },
+                  { q: "When is the next shuttle?", color: 'bg-blue-500' },
+                ].map(({ q, color }) => (
+                  <button
+                    key={q}
+                    onClick={() => handleSuggestionClick(q)}
+                    className="flex items-center gap-3 text-left hover:opacity-70 transition-opacity"
+                  >
+                    <span className={`w-2.5 h-2.5 rounded-full ${color}`} />
+                    <span className="text-foreground">{q}</span>
+                  </button>
+                ))}
+              </div>
+              
+              {/* Action chips */}
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: '🍔 Dining hours', q: 'What are dining hours?' },
+                  { label: '🅿️ Parking', q: 'Where can I park?' },
+                  { label: '🖨️ Printing', q: 'How do I print?' },
+                  { label: '📅 Events', q: 'What events are happening?' },
+                  { label: '🚌 Shuttle', q: 'Shuttle schedule' },
+                ].map(({ label, q }) => (
+                  <button
+                    key={label}
+                    onClick={() => handleSuggestionClick(q)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-muted hover:bg-muted/70 text-sm font-medium transition-colors"
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -405,66 +418,66 @@ export default function Home() {
                   m.role === 'user' ? 'items-end' : 'items-start'
                 }`}
               >
-                <div className={`flex items-start gap-3 max-w-[85%] ${
-                  m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                }`}>
-                  <div
-                    className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm ${
-                      m.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background text-foreground'
-                    }`}
-                  >
-                    {m.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                  </div>
-
-                  <div className={`relative group w-full`}>
-                      <div
-                        className={`relative overflow-hidden rounded-2xl text-sm leading-relaxed shadow-sm ${
-                          m.role === 'user'
-                            ? 'bg-primary text-primary-foreground px-4 py-3'
-                            : `bg-white border border-border shell-bg text-foreground px-3 py-3 sm:px-4 pb-3`
-                        }`}
-                      >
-                      {m.role === 'user' ? (
-                        <div className="whitespace-pre-wrap">{m.content}</div>
-                      ) : (
-                        <>
-                          <ReactMarkdown 
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                              strong: ({...props}) => <span className="font-bold text-primary" {...props} />,
-                              h1: ({...props}) => <h1 className="font-bold text-2xl text-primary mt-3 mb-1" {...props} />,
-                              h2: ({...props}) => <h2 className="font-bold text-xl text-primary mt-2 mb-1" {...props} />,
-                              h3: ({...props}) => <h3 className="font-bold text-lg text-primary mt-2 mb-1" {...props} />,
-                              ul: ({...props}) => <ul className="list-disc list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
-                              ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
-                              a: ({...props}) => <a className="text-primary underline hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />,
-                              p: ({...props}) => <p className="leading-relaxed mb-2 last:mb-0" {...props} />,
-                              table: ({...props}) => <div className="my-4 w-full overflow-x-auto rounded-lg border border-border"><table className="w-full text-sm" {...props} /></div>,
-                              thead: ({...props}) => <thead className="bg-muted/50 border-b border-border" {...props} />,
-                              tbody: ({...props}) => <tbody className="[&_tr:last-child]:border-0" {...props} />,
-                              tr: ({...props}) => <tr className="border-b border-border transition-colors hover:bg-muted/50" {...props} />,
-                              th: ({...props}) => <th className="px-4 py-2 text-left font-semibold text-primary whitespace-nowrap [&[align=center]]:text-center [&[align=right]]:text-right" {...props} />,
-                              td: ({...props}) => <td className="px-4 py-2 text-foreground [&[align=center]]:text-center [&[align=right]]:text-right" {...props} />,
-                            }}
-                          >
-                            {displayContent}
-                          </ReactMarkdown>
-
-                          {/* Render Source Card - Full width at bottom */}
-                          {sources.length > 0 && sources.map((source, idx) => (
-                            <SourceCard key={idx} title={source.title} url={source.url} />
-                          ))}
-                        </>
-                      )}
+                {m.role === 'user' ? (
+                  /* User message - dark pill on right */
+                  <div className="max-w-[85%]">
+                    <div className="inline-block px-4 py-3 rounded-3xl bg-muted text-foreground text-sm">
+                      {m.content}
                     </div>
-
-                    {m.role === 'assistant' && (
-                      <FeedbackButtons messageId={m.id} content={m.content} />
-                    )}
                   </div>
-                </div>
+                ) : (
+                  /* Assistant message - Gemini style */
+                  <div className="flex items-start gap-3 max-w-full">
+                    {/* Sparkle icon */}
+                    <div className="flex-shrink-0 mt-1">
+                      <Sparkles className="h-5 w-5 text-blue-400" />
+                    </div>
+                    
+                    {/* Message content and actions */}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm leading-relaxed text-foreground">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            strong: ({...props}) => <span className="font-bold text-primary" {...props} />,
+                            h1: ({...props}) => <h1 className="font-bold text-2xl text-primary mt-3 mb-1" {...props} />,
+                            h2: ({...props}) => <h2 className="font-bold text-xl text-primary mt-2 mb-1" {...props} />,
+                            h3: ({...props}) => <h3 className="font-bold text-lg text-primary mt-2 mb-1" {...props} />,
+                            ul: ({...props}) => <ul className="list-disc list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
+                            ol: ({...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5 marker:text-primary" {...props} />,
+                            a: ({...props}) => <a className="text-primary underline hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />,
+                            p: ({...props}) => <p className="leading-relaxed mb-2 last:mb-0" {...props} />,
+                            table: ({...props}) => <div className="my-4 w-full overflow-x-auto rounded-lg border border-border"><table className="w-full text-sm" {...props} /></div>,
+                            thead: ({...props}) => <thead className="bg-muted/50 border-b border-border" {...props} />,
+                            tbody: ({...props}) => <tbody className="[&_tr:last-child]:border-0" {...props} />,
+                            tr: ({...props}) => <tr className="border-b border-border transition-colors hover:bg-muted/50" {...props} />,
+                            th: ({...props}) => <th className="px-4 py-2 text-left font-semibold text-primary whitespace-nowrap [&[align=center]]:text-center [&[align=right]]:text-right" {...props} />,
+                            td: ({...props}) => <td className="px-4 py-2 text-foreground [&[align=center]]:text-center [&[align=right]]:text-right" {...props} />,
+                          }}
+                        >
+                          {displayContent}
+                        </ReactMarkdown>
+
+                        {/* Render Source Card */}
+                        {sources.length > 0 && sources.map((source, idx) => (
+                          <SourceCard key={idx} title={source.title} url={source.url} />
+                        ))}
+                      </div>
+                      
+                      {/* Gemini-style action buttons */}
+                      <div className="flex items-center gap-1 mt-3">
+                        <button 
+                          onClick={() => navigator.clipboard.writeText(m.content)}
+                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                          title="Copy"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </button>
+                        <FeedbackButtons messageId={m.id} content={m.content} />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Related Questions Chips */}
                 {relatedQuestions.length > 0 && (
@@ -486,16 +499,16 @@ export default function Home() {
           })}
           
           {isLoading && messages[messages.length - 1]?.role === 'user' && (
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-primary/10 shadow-sm">
-                <Bot className="h-4 w-4 text-primary animate-pulse" />
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-1">
+                <Sparkles className="h-5 w-5 text-blue-400 animate-pulse" />
               </div>
-               <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-muted/50">
+              <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">RockyGPT is thinking</span>
                 <div className="flex gap-1">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             </div>
@@ -505,16 +518,16 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Input Area (same as before) */}
-      <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-background via-background/90 to-transparent pb-6 pt-10 px-4">
+      {/* Input Area (Gemini-style) */}
+      <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-background via-background to-transparent pb-4 pt-6 px-4">
         <div className="mx-auto max-w-2xl">
           <form
             onSubmit={handleSubmit}
-            className="relative flex items-center rounded-2xl border border-input bg-background shadow-lg ring-offset-background focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
+            className="relative flex items-center rounded-3xl bg-muted border border-border"
           >
             <input
-              className="flex-1 bg-transparent px-4 py-4 text-base md:text-sm outline-none placeholder:text-muted-foreground text-foreground"
-              placeholder="Message RockyGPT..."
+              className="flex-1 bg-transparent px-5 py-4 text-base outline-none placeholder:text-muted-foreground text-foreground"
+              placeholder="Ask RockyGPT"
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
@@ -522,24 +535,24 @@ export default function Home() {
               <button
                 type="button"
                 onClick={stopGeneration}
-                className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-destructive text-destructive-foreground transition-opacity hover:opacity-90"
+                className="mr-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white transition-opacity hover:opacity-90"
                 title="Stop generating"
               >
-                <Square className="h-3 w-3 fill-current" />
+                <Square className="h-4 w-4 fill-current" />
                 <span className="sr-only">Stop</span>
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={!input?.trim()}
-                className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="mr-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-30"
               >
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Send</span>
               </button>
             )}
           </form>
-          <div className="mt-2 text-center text-[10px] text-muted-foreground">
+          <div className="mt-3 text-center text-xs text-muted-foreground">
             RockyGPT can make mistakes. Check official sources.
           </div>
         </div>

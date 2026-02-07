@@ -21,26 +21,29 @@
     --ramapo-gray: #848282;
     --ramapo-white: #FFFFFF;
 
-    --background: var(--ramapo-white);
-    --foreground: var(--ramapo-black);
+    /* Dark theme by default (Gemini-style) */
+    --background: #1a1a1a;
+    --foreground: #e5e5e5;
     
     --primary: var(--ramapo-maroon);
     --primary-foreground: var(--ramapo-white);
     
-    --muted: #f4f4f5;
-    --muted-foreground: var(--ramapo-gray);
+    --muted: #2a2a2a;
+    --muted-foreground: #a1a1aa;
     
-    --border: #e4e4e7;
+    --border: #3a3a3a;
+    
+    /* Accent colors for suggestions */
+    --accent-purple: #7c3aed;
+    --accent-green: #10b981;
   }
 
-  .dark {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primary: #8E0A26;
-    --primary-foreground: #FFFFFF;
-    --muted: #262626;
-    --muted-foreground: #a1a1aa;
-    --border: #333333;
+  .light {
+    --background: var(--ramapo-white);
+    --foreground: var(--ramapo-black);
+    --muted: #f4f4f5;
+    --muted-foreground: var(--ramapo-gray);
+    --border: #e4e4e7;
   }
 }
 
