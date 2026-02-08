@@ -582,12 +582,22 @@ export default function Home() {
               ? extractSources(m.content) 
               : { cleanContent: m.content, sources: [] };
 
-            // 2. Extract Related Questions
-            let displayContent = contentWithRelated;
+            // 2. Extract Menu Button Trigger
+            let contentAfterMenu = contentWithRelated;
+            let showMenuButton = false;
+
+            if (m.role === 'assistant' && contentWithRelated.includes('<<VIEW_MENU>>')) {
+              const parts = contentWithRelated.split('<<VIEW_MENU>>');
+              contentAfterMenu = parts[0].trim();
+              showMenuButton = true;
+            }
+
+            // 3. Extract Related Questions
+            let displayContent = contentAfterMenu;
             let relatedQuestions: string[] = [];
 
-            if (m.role === 'assistant' && contentWithRelated.includes('<<RELATED>>')) {
-              const parts = contentWithRelated.split('<<RELATED>>');
+            if (m.role === 'assistant' && contentAfterMenu.includes('<<RELATED>>')) {
+              const parts = contentAfterMenu.split('<<RELATED>>');
               displayContent = parts[0].trim();
               const relatedBlock = parts[1];
               if (relatedBlock) {
@@ -700,6 +710,17 @@ export default function Home() {
                           <Copy className="h-4 w-4" />
                         </button>
                         <FeedbackButtons messageId={m.id} content={m.content} />
+                        
+                        {/* Menu Button - Inline with actions */}
+                        {showMenuButton && (
+                          <button
+                            onClick={() => setIsMenuOpen(true)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-xs font-medium"
+                          >
+                            <Utensils className="h-3.5 w-3.5" />
+                            Dining Menus
+                          </button>
+                        )}
                         
                         {/* Source links inline */}
                         {sources.length > 0 && sources.map((source, idx) => (

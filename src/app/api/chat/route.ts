@@ -274,6 +274,12 @@ export async function POST(req: Request) {
       • Location: Bradley Center
       • Description: Details here
     
+    - **MENU BUTTON (OPTIONAL)**:
+      - When answering questions about the dining menu, include a "View Menu" button trigger.
+      - After your main answer and before Sources, add the delimiter: <<VIEW_MENU>>
+      - This will display an interactive button for users to open the full menu modal.
+      - Only use this when the user is asking about food, meals, or the dining menu.
+    
     - **CITATIONS (REQUIRED - CRITICAL)**:
       - You MUST ALWAYS include a Sources section when you use information from the Context.
       - **CRITICAL**: Copy the EXACT URL from the [Source: Title (URL)] tag in the Context. Do NOT make up or guess URLs.
