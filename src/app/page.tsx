@@ -85,6 +85,7 @@ export default function Home() {
   const touchCurrent = useRef<{ x: number, y: number } | null>(null);
   const [dragOffset, setDragOffset] = useState<number>(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [menuMealContext, setMenuMealContext] = useState<string>('lunch'); // Track meal context for menu modal
   const SIDEBAR_WIDTH = 288; // w-72 = 18rem = 288px
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -577,28 +578,19 @@ export default function Home() {
           )}
 
           {messages.map((m: any) => {
-            // 1. Extract sources first
-            const { cleanContent: contentWithRelated, sources } = m.role === 'assistant' 
-              ? extractSources(m.content) 
-              : { cleanContent: m.content, sources: [] };
+            let workingContent = m.content;
+            
+            // 1. Extract Sources FIRST (before any other parsing)
+            const { cleanContent: contentAfterSources, sources } = m.role === 'assistant' 
+              ? extractSources(workingContent) 
+              : { cleanContent: workingContent, sources: [] };
+            workingContent = contentAfterSources;
 
-            // 2. Extract Menu Button Trigger
-            let contentAfterMenu = contentWithRelated;
-            let showMenuButton = false;
-
-            if (m.role === 'assistant' && contentWithRelated.includes('<<VIEW_MENU>>')) {
-              const parts = contentWithRelated.split('<<VIEW_MENU>>');
-              contentAfterMenu = parts[0].trim();
-              showMenuButton = true;
-            }
-
-            // 3. Extract Related Questions
-            let displayContent = contentAfterMenu;
+            // 2. Extract Related Questions
             let relatedQuestions: string[] = [];
-
-            if (m.role === 'assistant' && contentAfterMenu.includes('<<RELATED>>')) {
-              const parts = contentAfterMenu.split('<<RELATED>>');
-              displayContent = parts[0].trim();
+            if (m.role === 'assistant' && workingContent.includes('<<RELATED>>')) {
+              const parts = workingContent.split('<<RELATED>>');
+              workingContent = parts[0].trim();
               const relatedBlock = parts[1];
               if (relatedBlock) {
                 relatedQuestions = relatedBlock
@@ -607,6 +599,24 @@ export default function Home() {
                   .filter((q: string) => q.length > 0);
               }
             }
+
+            // 3. Extract Menu Button Trigger LAST
+            let showMenuButton = false;
+            let menuMeal = 'lunch'; // default meal
+
+            if (m.role === 'assistant' && workingContent.includes('<<VIEW_MENU')) {
+              const parts = workingContent.split('<<VIEW_MENU');
+              workingContent = parts[0].trim();
+              showMenuButton = true;
+              
+              // Extract meal context (e.g., "<<VIEW_MENU:dinner>>")
+              const mealMatch = parts[1]?.match(/^:(\w+)>>/);
+              if (mealMatch) {
+                menuMeal = mealMatch[1]; // 'dinner', 'breakfast', 'lunch', 'latenight'
+              }
+            }
+
+            const displayContent = workingContent;
 
             return (
               <div
@@ -714,11 +724,17 @@ export default function Home() {
                         {/* Menu Button - Inline with actions */}
                         {showMenuButton && (
                           <button
-                            onClick={() => setIsMenuOpen(true)}
+                            onClick={() => {
+                              setMenuMealContext(menuMeal);
+                              setIsMenuOpen(true);
+                            }}
                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-xs font-medium"
                           >
                             <Utensils className="h-3.5 w-3.5" />
-                            Dining Menus
+                            {menuMeal === 'breakfast' || menuMeal === 'brunch' ? 'Brunch Menu' :
+                             menuMeal === 'lunch' ? 'Lunch Menu' :
+                             menuMeal === 'dinner' ? 'Dinner Menu' :
+                             menuMeal === 'latenight' ? 'Late Night Menu' : 'Dining Menus'}
                           </button>
                         )}
                         
@@ -820,7 +836,7 @@ export default function Home() {
       </div>
 
       {/* Modals */}
-      <MenuModal isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      <MenuModal isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} defaultMeal={menuMealContext} />
       <BusModal isOpen={isBusModalOpen} onClose={() => setIsBusModalOpen(false)} />
       <HoursModal isOpen={isHoursModalOpen} onClose={() => setIsHoursModalOpen(false)} />
       <DirectoryModal isOpen={isDirectoryModalOpen} onClose={() => setIsDirectoryModalOpen(false)} />

@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 interface MenuModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultMeal?: string;
 }
 
 interface MenuItem {
@@ -168,7 +169,7 @@ function FoodPreviewModal({ item, onClose }: { item: MenuItem; onClose: () => vo
   );
 }
 
-export function MenuModal({ isOpen, onClose }: MenuModalProps) {
+export function MenuModal({ isOpen, onClose, defaultMeal }: MenuModalProps) {
   const [data, setData] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('');
@@ -185,8 +186,19 @@ export function MenuModal({ isOpen, onClose }: MenuModalProps) {
             if(resData.content) {
                 const parsed = parseMenuMarkdown(resData.content);
                 setData(parsed);
-                const lunch = parsed.find(m => m.name.toUpperCase().includes('LUNCH'));
-                setActiveTab(lunch ? lunch.name : (parsed[0]?.name || ''));
+                
+                // Use defaultMeal if provided, otherwise default to lunch
+                // Map 'breakfast' to 'brunch' since menu uses 'BRUNCH'
+                if (defaultMeal) {
+                  const mealToFind = defaultMeal.toLowerCase() === 'breakfast' ? 'brunch' : defaultMeal.toLowerCase();
+                  const targetMeal = parsed.find(m => 
+                    m.name.toLowerCase().includes(mealToFind)
+                  );
+                  setActiveTab(targetMeal ? targetMeal.name : (parsed[0]?.name || ''));
+                } else {
+                  const lunch = parsed.find(m => m.name.toUpperCase().includes('LUNCH'));
+                  setActiveTab(lunch ? lunch.name : (parsed[0]?.name || ''));
+                }
             }
             setLoading(false);
         })
@@ -195,7 +207,21 @@ export function MenuModal({ isOpen, onClose }: MenuModalProps) {
             setLoading(false);
         });
     }
-  }, [isOpen, data.length]);
+  }, [isOpen, data.length, defaultMeal]);
+
+  // Update active tab when defaultMeal changes (after data is loaded)
+  useEffect(() => {
+    if (defaultMeal && data.length > 0) {
+      // Map 'breakfast' to 'brunch' since menu uses 'BRUNCH'
+      const mealToFind = defaultMeal.toLowerCase() === 'breakfast' ? 'brunch' : defaultMeal.toLowerCase();
+      const targetMeal = data.find(m => 
+        m.name.toLowerCase().includes(mealToFind)
+      );
+      if (targetMeal) {
+        setActiveTab(targetMeal.name);
+      }
+    }
+  }, [defaultMeal, data]);
 
   // Lock scroll
   useEffect(() => {

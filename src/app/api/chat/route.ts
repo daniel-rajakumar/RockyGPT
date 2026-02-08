@@ -185,7 +185,13 @@ export async function POST(req: Request) {
       .map(s => `- ${s.title}: ${s.url}`)
       .join('\n');
     
-    const contextWithSummary = `${context}\n\n---\nAVAILABLE SOURCES (use these exact URLs in your Sources section):\n${sourcesSummary}`;
+    // Pre-format the sources as markdown for AI to copy exactly
+    const sourcesMarkdown = Array.from(uniqueSources.values())
+      .slice(0, 2) // Limit to 2 sources
+      .map(s => `- [${s.title}](${s.url})`)
+      .join('\n');
+    
+    const contextWithSummary = `${context}\n\n---\nAVAILABLE SOURCES (use these exact URLs in your Sources section):\n${sourcesSummary}\n\n===PRE-FORMATTED SOURCES BLOCK TO COPY EXACTLY===\n**Sources:**\n${sourcesMarkdown}\n===END OF SOURCES BLOCK===`;
     
     // 3. Construct system prompt
     const now = new Date();
@@ -203,6 +209,19 @@ export async function POST(req: Request) {
     const systemPrompt = `You are RockyGPT, the helpful AI assistant for Ramapo College.
     
     Current Date & Time: ${currentTimestamp}
+    
+    ⚠️ MANDATORY RESPONSE STRUCTURE (ALWAYS FOLLOW):
+    Every response MUST end with these sections IN THIS ORDER:
+    1. [Your helpful answer]
+    2. <<VIEW_MENU:meal>> (only for food/menu questions - pick: breakfast, lunch, dinner, latenight)
+    3. **Sources:**
+       - [Source Name](URL)
+    4. <<RELATED>>
+       Short follow-up 1?
+       Short follow-up 2?
+       Short follow-up 3?
+    
+    NEVER SKIP items 3 and 4. They are REQUIRED on every response.
     
     Instructions:
     - Answer based ONLY on the provided Context, EXCEPT for date/time references.
@@ -274,40 +293,63 @@ export async function POST(req: Request) {
       • Location: Bradley Center
       • Description: Details here
     
-    - **MENU BUTTON (OPTIONAL)**:
-      - When answering questions about the dining menu, include a "View Menu" button trigger.
-      - After your main answer and before Sources, add the delimiter: <<VIEW_MENU>>
-      - This will display an interactive button for users to open the full menu modal.
-      - Only use this when the user is asking about food, meals, or the dining menu.
+    - **MENU BUTTON (REQUIRED for menu questions)**:
+      - When answering questions about the dining menu, food, or meals, you MUST include a "View Menu" button trigger.
+      - After your main answer and before Sources, add the delimiter with meal: <<VIEW_MENU:meal>>
+      - Meal options: brunch, lunch, dinner, latenight
+      - **IMPORTANT**: The dining hall serves BRUNCH (not breakfast) on weekends. If a user asks for "breakfast", politely correct them: "The dining hall serves brunch instead of breakfast today! Here's the brunch menu..."
+      - Choose the meal based on what the user is asking about. Examples:
+        - "What's for lunch?" → <<VIEW_MENU:lunch>>
+        - "Dinner options?" → <<VIEW_MENU:dinner>>
+        - "Show me breakfast" → Correct the user and use <<VIEW_MENU:brunch>>
+        - "What's for late night?" → <<VIEW_MENU:latenight>>
+        - If general/unclear, default to lunch → <<VIEW_MENU:lunch>>
+      - This will display an interactive button that opens the menu modal to the specified meal.
+      - ALWAYS include this delimiter when the user asks about food or the menu.
     
     - **CITATIONS (REQUIRED - CRITICAL)**:
-      - You MUST ALWAYS include a Sources section when you use information from the Context.
-      - **CRITICAL**: Copy the EXACT URL from the [Source: Title (URL)] tag in the Context. Do NOT make up or guess URLs.
-      - Use EXACTLY this format at the end of your answer (before related questions):
-        **Sources:**
-        - [Source Title](EXACT URL FROM CONTEXT)
-      - Include 1-3 sources maximum. Pick the most relevant.
-      - If no Context is provided or you don't use it, you may skip sources.
-      - Example: If context says "[Source: Dining Menus (https://ramapo.sodexomyway.com/en-us/locations/birch-tree-inn)]", 
-        output: **Sources:** - [Dining Menus](https://ramapo.sodexomyway.com/en-us/locations/birch-tree-inn)
+      - You MUST include the Sources section after your answer.
+      - Look for "===PRE-FORMATTED SOURCES BLOCK TO COPY EXACTLY===" in the Context.
+      - COPY THAT ENTIRE BLOCK VERBATIM (starting with "**Sources:**") into your response.
+      - Do NOT modify the URLs or titles - just copy exactly as given.
     
-    - **RELATED QUESTIONS (REQUIRED)**:
+    - **RELATED QUESTIONS (REQUIRED - NEVER SKIP)**:
       - At the very end of your response, after Sources, you MUST suggest 3 relevant follow-up questions.
       - Use the delimiter '<<RELATED>>' on a new line before the questions.
       - One question per line.
       - Questions MUST be **VERY SHORT (max 6 words)** to fit in buttons.
       - Example: "Dining hours today?", "Next bus?", "Events tonight?"
-      
-      Example Format:
-      [Your main answer here...]
-      
-      **Sources:**
-      - [Dining Menus](https://ramapo.sodexomyway.com/en-us/locations/birch-tree-inn)
-      
-      <<RELATED>>
-      What's the next bus?
-      Is the dining hall open?
-      Any events tonight?
+    
+    **IMPORTANT - COMPLETE RESPONSE FORMAT (follow this exactly for menu questions):**
+    [Your main answer here...]
+    
+    <<VIEW_MENU:meal>>
+    
+    **Sources:**
+    - [Source Title](URL)
+    
+    <<RELATED>>
+    Follow-up question 1?
+    Follow-up question 2?
+    Follow-up question 3?
+
+    ═══════════════════════════════════════════════════════
+    YOUR RESPONSE MUST END WITH THESE EXACT SECTIONS:
+    ═══════════════════════════════════════════════════════
+    
+    For menu/food questions, your response MUST have this structure:
+    [Answer about menu]
+    
+    <<VIEW_MENU:lunch>>
+    
+    **Sources:**
+    - [Dining Menus](https://ramapo.sodexomyway.com/en-us/locations/birch-tree-inn)
+    
+    <<RELATED>>
+    Dining hours today?
+    What's for dinner?
+    Late night options?
+    ═══════════════════════════════════════════════════════
     
     Context:
     ${contextWithSummary}`;
@@ -342,8 +384,42 @@ export async function POST(req: Request) {
       },
     });
 
-    // 5. Stream the response back
-    return result.toTextStreamResponse();
+    // 5. Stream the response back with appended sources
+    // Create the sources and related questions suffix
+    const sourcesList = Array.from(uniqueSources.values()).slice(0, 2);
+    const sourcesText = sourcesList.length > 0 
+      ? `\n\n**Sources:**\n${sourcesList.map(s => `- [${s.title}](${s.url})`).join('\n')}`
+      : '';
+    
+    const relatedQuestionsText = `\n\n<<RELATED>>\nDining hours today?\nWhat else is on the menu?\nLate night options?`;
+    
+    const suffix = sourcesText + relatedQuestionsText;
+    
+    // Create a readable stream that combines the AI response with our suffix
+    const encoder = new TextEncoder();
+    const textStream = result.textStream;
+    
+    const combinedStream = new ReadableStream({
+      async start(controller) {
+        try {
+          // Stream the AI response
+          for await (const chunk of textStream) {
+            controller.enqueue(encoder.encode(chunk));
+          }
+          // Append our suffix at the end
+          controller.enqueue(encoder.encode(suffix));
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
+      }
+    });
+    
+    return new Response(combinedStream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+      },
+    });
 
   } catch (error: any) {
     // === BETTER ERROR HANDLING ===
