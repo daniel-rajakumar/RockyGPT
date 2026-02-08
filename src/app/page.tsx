@@ -41,9 +41,33 @@ const linkSmartChips = (text: string) => {
   });
 };
 
+// Helper to format timestamp
+const formatTimestamp = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  
+  const timeString = date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
+  });
+  
+  if (isToday) {
+    return timeString;
+  }
+  
+  const dateString = date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric' 
+  });
+  
+  return `${dateString}, ${timeString}`;
+};
+
 export default function Home() {
   // ... (state and handlers remain same)
-  const [messages, setMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string }>>([]);
+  const [messages, setMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp?: number }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isBusModalOpen, setIsBusModalOpen] = useState(false);
@@ -240,7 +264,7 @@ export default function Home() {
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
-    const userMessage = { id: Date.now().toString(), role: 'user' as const, content };
+    const userMessage = { id: Date.now().toString(), role: 'user' as const, content, timestamp: Date.now() };
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
@@ -262,7 +286,7 @@ export default function Home() {
       const assistantId = (Date.now() + 1).toString();
       setMessages((prev) => [
         ...prev,
-        { id: assistantId, role: 'assistant', content: '' },
+        { id: assistantId, role: 'assistant', content: '', timestamp: Date.now() },
       ]);
 
       const reader = response.body?.getReader();
@@ -591,9 +615,14 @@ export default function Home() {
                 ) : (
                   /* Assistant message - Gemini style with icon on top */
                   <div className="flex flex-col gap-3 w-full">
-                    {/* Sparkle icon on its own row */}
-                    <div className="flex items-center">
+                    {/* Sparkle icon and timestamp row */}
+                    <div className="flex items-end gap-3">
                       <Sparkles className="h-5 w-5 text-white" />
+                      {m.timestamp && (
+                        <span className="text-sm text-muted-foreground/80 mt-0.5">
+                          {formatTimestamp(m.timestamp)}
+                        </span>
+                      )}
                     </div>
                     
                     {/* Message content */}
